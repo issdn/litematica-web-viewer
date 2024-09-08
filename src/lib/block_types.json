@@ -1,0 +1,15 @@
+{
+	"minecraft:water": "fluid",
+	"minecraft:lava": "fluid",
+	"minecraft:air": "air",
+	"minecraft:glass": "transparent",
+	"minecraft:glass_pane": "transparent",
+	"minecraft:torch": "transparent",
+	"minecraft:soul_torch": "transparent",
+	"minecraft:redstone_torch": "transparent",
+	"minecraft:amethyst_cluster": "cross",
+	"minecraft:amethyst_bud": "cross",
+	"minecraft:medium_amethyst_bud": "cross",
+	"minecraft:small_amethyst_bud": "cross",
+	"minecraft:bamboo_sapling": "cross"
+}
