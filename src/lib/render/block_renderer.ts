@@ -3,7 +3,8 @@ import {
 	Facing,
 	type BlockRotation,
 	type SimpleVector3D,
-	type Element
+	type Element,
+	type NBTBlockStateProperties
 } from '$lib/common_types';
 import { Vector3D, type NBTVector3D } from '$lib/parse/schematic_parser';
 import { Texture, Vector3 } from 'three';
@@ -14,6 +15,7 @@ import type {
 	ResolvedFaceData,
 	ResolvedFaces
 } from '../minecraft_block_resolver';
+import type { BlockNameResolver } from '../parse/block_name_resolver';
 
 type Optional<T, K extends keyof T> = Pick<Partial<T>, K> & Omit<T, K>;
 
@@ -155,6 +157,8 @@ class MinecraftBlock {
 	xAxisFaces = [Facing.North, Facing.Up, Facing.South, Facing.Down];
 	yAxisFaces = [Facing.West, Facing.Down, Facing.East, Facing.Up];
 	uvManipulation: ReturnType<typeof uvManipulation>;
+	nameResolver: BlockNameResolver;
+	properties: NBTBlockStateProperties;
 
 	_elements?: MinecraftElement[];
 
@@ -163,7 +167,9 @@ class MinecraftBlock {
 		blockModel: Required<ResolvedBlockModel>,
 		rotation: BlockRotation,
 		uvlock: boolean,
-		blockType: BlockType
+		blockType: BlockType,
+		nameResolver: BlockNameResolver,
+		properties: NBTBlockStateProperties
 	) {
 		this.position = position;
 		this.blockModel = blockModel;
@@ -178,14 +184,12 @@ class MinecraftBlock {
 			y: degToRad(this.rotationDegrees.y)
 		};
 		this.uvManipulation = uvManipulation(this);
+		this.nameResolver = nameResolver;
+		this.properties = properties;
 	}
 
 	get isTransparent() {
 		return this.blockType == BlockType.transparent;
-	}
-
-	get isCross() {
-		return this.blockType == BlockType.cross;
 	}
 
 	get elements() {

@@ -6,19 +6,21 @@
 	import type { ResolvedFaceData } from '../minecraft_block_resolver';
 	import { useTask } from '@threlte/core';
 
-	export let element: MinecraftElement;
-	export let block: MinecraftBlock;
-	export let face: Omit<ResolvedFaceData, 'texture'> & { facing: Facing } & {
-		texture: {
-			asset: ResolvedFaceData['texture']['asset'];
-			animation: NonNullable<ResolvedFaceData['texture']['animation']>;
+	interface Props {
+		element: MinecraftElement;
+		block: MinecraftBlock;
+		face: Omit<ResolvedFaceData, 'texture'> & { facing: Facing } & {
+			texture: {
+				asset: ResolvedFaceData['texture']['asset'];
+				animation: NonNullable<ResolvedFaceData['texture']['animation']>;
+			};
 		};
-	};
-	export let side: Side = FrontSide;
+		side?: Side;
+	}
 
-	let texture: Texture;
+	let { element, block, face, side = FrontSide }: Props = $props();
 
-	texture = new Texture(face.texture.asset);
+	const texture: Texture = new Texture(face.texture.asset);
 
 	const cols = face.texture.asset.height / 16;
 	const targetInterval = 0.05 * (face.texture.animation.animation.frametime ?? 1);

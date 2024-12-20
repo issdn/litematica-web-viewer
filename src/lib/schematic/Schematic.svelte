@@ -1,17 +1,19 @@
 <script lang="ts">
 	import { T, useLoader, useThrelte } from '@threlte/core';
-	import { BlockType, Facing, type Blockstate, type NBTBlockState } from '../common_types';
+	import { BlockType, Facing, type Blockstate, type NBTBlockState } from '$lib/common_types';
 	import Cuboid from './Cuboid.svelte';
-	import { buildBlockStateArray, Vector3D, type Region } from '../parse/schematic_parser';
-	import { OrbitControls, Gizmo } from '@threlte/extras';
+	import { buildBlockStateArray, Vector3D, type Region } from '$lib/parse/schematic_parser';
+	import { OrbitControls } from '@threlte/extras';
 	import BlockTypesMap from '$lib/block_types.json';
 	import { BlockNameResolver, type NamespaceFile } from '$lib/parse/block_name_resolver';
-	import {
-		MinecraftBlockResolver,
-		ServerMinecraftAssetsManager
-	} from '../minecraft_block_resolver';
+	import { MinecraftBlockResolver } from '$lib/minecraft_block_resolver';
+	import { ServerMinecraftAssetsManager } from '$root/src/lib/assets_manager';
 
-	export let regions: Region<NBTBlockState>[];
+	interface Props {
+		regions: Region<NBTBlockState>[];
+	}
+
+	let { regions }: Props = $props();
 
 	const blockTypesMap = BlockTypesMap as { [key in NamespaceFile]: BlockType };
 
@@ -68,13 +70,9 @@
 	<OrbitControls />
 </T.PerspectiveCamera>
 
-<Gizmo horizontalPlacement="left" paddingX={20} paddingY={20} />
-
 <T.Scene />
 
 <T.AmbientLight />
-
-<!-- <T.DirectionalLight intensity={1} castShadow position={[4, 4, 12]} /> -->
 
 <!-- <T.Mesh position.y={-8} rotation.x={-Math.PI / 2} receiveShadow>
 	<T.PlaneGeometry args={[50 * 16, 50 * 16]} />
@@ -86,7 +84,6 @@
 {:then blocks}
 	<T.Group>
 		{#each blocks as block}
-			{console.log(block.Name)}
 			<Cuboid resolver={block.resolver} blockType={block.blockType} position={block.position} />
 		{/each}
 	</T.Group>

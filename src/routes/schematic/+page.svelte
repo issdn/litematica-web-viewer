@@ -1,25 +1,31 @@
 <script lang="ts">
 	import { Canvas } from '@threlte/core';
 	import Schematic from '../../lib/schematic/Schematic.svelte';
+	import { WebGLRenderer } from 'three';
 
-	export let data;
+	let { data } = $props();
 
 	const regions = Object.values(data);
 
-	$: innerWidth = 0;
-	$: innerHeight = 0;
+	let innerWidth = $state(0);
+	let innerHeight = $state(0);
 </script>
 
 <svelte:window bind:innerWidth bind:innerHeight />
 
-<Canvas
-	rendererParameters={{
-		antialias: false
-	}}
-	size={{ height: innerHeight, width: innerWidth }}
->
-	<Schematic {regions} />
-</Canvas>
+<div style="width: {innerWidth}px; height: {innerHeight}px;">
+	<Canvas
+		createRenderer={(canvas) => {
+			return new WebGLRenderer({
+				canvas,
+				alpha: true,
+				antialias: false
+			});
+		}}
+	>
+		<Schematic {regions} />
+	</Canvas>
+</div>
 
 <style>
 	:global(html, body) {

@@ -1,6 +1,6 @@
 import type {
 	BlockModel,
-	Blockstate,
+	FaceData,
 	Faces,
 	Facing,
 	MCMeta,
@@ -16,6 +16,7 @@ import {
 	type FolderFile,
 	type NamespaceFolderFile
 } from './parse/block_name_resolver';
+import type { MinecraftAssetsManager } from './assets_manager';
 
 export enum FileType {
 	Blockstate,
@@ -24,10 +25,8 @@ export enum FileType {
 	MCMeta
 }
 
-export type ResolvedFaceData = {
-	uv?: [number, number, number, number];
+export type ResolvedFaceData = Omit<FaceData, 'texture'> & {
 	texture: { animation: MCMeta | null; asset: HTMLImageElement };
-	rotation?: number;
 };
 
 export type ResolvedFaces = {
@@ -46,59 +45,6 @@ type PropertyKeys = Record<string, NBTBlockStateProperties[keyof NBTBlockStatePr
 
 function getRandomArrayItem<T>(arr: T[]) {
 	return arr[Math.floor(Math.random() * arr.length)];
-}
-
-export interface MinecraftAssetsManager {
-	getBlockstate(resolver: BlockNameResolver): Promise<Blockstate>;
-
-	getBlockModel(resolver: BlockNameResolver): Promise<BlockModel>;
-
-	getAssets(resolver: BlockNameResolver): Promise<HTMLImageElement>;
-
-	getMCMeta(resolver: BlockNameResolver): Promise<MCMeta>;
-}
-
-export class ServerMinecraftAssetsManager implements MinecraftAssetsManager {
-	cache: Map<string, object | string> = new Map();
-
-	async getBlockstate(resolver: BlockNameResolver): Promise<Blockstate> {
-		const url = resolver.getRelativeBlockstatePath();
-		if (this.cache.has(url)) return this.cache.get(url) as Blockstate;
-		const result = await (await fetch(url)).json();
-		this.cache.set(url, result);
-		return result;
-	}
-
-	async getBlockModel(resolver: BlockNameResolver): Promise<BlockModel> {
-		const url = resolver.getRelativeBlockModelPath();
-		if (this.cache.has(url)) return this.cache.get(url) as BlockModel;
-		const result = (await (await fetch(url)).json()) as BlockModel;
-		this.cache.set(url, result);
-		return result;
-	}
-
-	async getAssets(resolver: BlockNameResolver) {
-		const url = resolver.getRelativeTexturePath();
-		let img: HTMLImageElement;
-		if (this.cache.has(url)) {
-			img = this.cache.get(url) as HTMLImageElement;
-		} else {
-			const blob = await (await fetch(url)).blob();
-			img = new Image();
-			img.src = URL.createObjectURL(blob);
-			await img.decode();
-			this.cache.set(url, img);
-		}
-		return img;
-	}
-
-	async getMCMeta(resolver: BlockNameResolver) {
-		const url = resolver.getRelativeMCMetaPath();
-		if (this.cache.has(url)) return this.cache.get(url) as MCMeta;
-		const json = await (await fetch(url)).json();
-		this.cache.set(url, json);
-		return json as MCMeta;
-	}
 }
 
 class ResolvingError extends Error {
@@ -200,33 +146,39 @@ export class MinecraftBlockResolver {
 		}, {} as PropertyKeys);
 	}
 
+	doesMatchAND(values: NBTBlockStateProperties[], keys: PropertyKeys): boolean {
+		return values.every((caseObj) => this.doesMatch(caseObj, keys));
+	}
+
+	doesMatchOR(values: NBTBlockStateProperties[], keys: PropertyKeys) {
+		return values.findIndex((caseObj) => this.doesMatch(caseObj, keys)) != -1;
+	}
+
+	doesMatch(values: NBTBlockStateProperties, keys: PropertyKeys) {
+		return Object.entries(values).every(([key, value]) => {
+			if (!(key in keys)) return false;
+			if (typeof value == 'string') {
+				if (typeof keys[key] != 'string') {
+					throw new ResolvingError('Property key has incorrect type');
+				}
+				return value.split('|').includes(keys[key]);
+			}
+			return keys[key] == value;
+		});
+	}
+
 	fromMultipart(blockstate: Multipart) {
 		const propertyKeys = this.getPropertyKeys();
 		return blockstate.multipart.reduce((prev, { when, apply }) => {
 			if (when === undefined) return [...prev, apply];
 			if ('AND' in when) {
-				const match = when['AND'].every((caseObj) => {
-					const [key, value] = Object.entries(caseObj)[0];
-					return propertyKeys[key] == value;
-				});
-				if (match) return [...prev, apply];
-				else return prev;
+				if (this.doesMatchAND(when['AND'], propertyKeys)) return [...prev, apply];
 			} else if ('OR' in when) {
-				const match =
-					when['OR'].findIndex((caseObj) => {
-						const [key, value] = Object.entries(caseObj)[0];
-						return propertyKeys[key] == value;
-					}) != -1;
-				if (match) return [...prev, apply];
-				else return prev;
+				if (this.doesMatchOR(when['OR'], propertyKeys)) return [...prev, apply];
 			} else {
-				Object.entries(propertyKeys).forEach(([key, value]) => {
-					if (when[key as keyof typeof when] == value) {
-						prev = [...prev, apply];
-					}
-				});
-				return prev;
+				if (this.doesMatch(when, propertyKeys)) return [...prev, apply];
 			}
+			return prev;
 		}, [] as Model[]);
 	}
 
@@ -259,13 +211,21 @@ export class MinecraftBlockResolver {
 		if (parentTextures == null) {
 			return childTextures;
 		}
-		return Object.entries(childTextures).reduce(
-			(prev, [key, value]) => ({
+		return Object.entries(childTextures).reduce((prev, [key, value]) => {
+			let newValue: string | undefined = '';
+			if (value.startsWith('#')) {
+				newValue = parentTextures[this.linkNameToName(value)];
+			} else {
+				newValue = value;
+			}
+			if (value == undefined) {
+				throw new ResolvingError(`Couldn't find any texture with key "${value}"`);
+			}
+			return {
 				...prev,
-				[key]: parentTextures[this.linkNameToName(value)]
-			}),
-			parentTextures
-		);
+				[key]: newValue
+			};
+		}, parentTextures);
 	}
 
 	linkNameToName = (name: string) => name.substring(1) as ModelTexture;

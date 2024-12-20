@@ -12,10 +12,14 @@
 	import { MinecraftBlockResolver } from '$lib/minecraft_block_resolver';
 	import { MinecraftBlock } from '$lib/render/block_renderer';
 
-	export let position: NBTVector3D;
-	export let geometry: SimpleVector3D = [16, 16, 16];
-	export let blockType: BlockType;
-	export let resolver: MinecraftBlockResolver;
+	interface Props {
+		position: NBTVector3D;
+		geometry?: SimpleVector3D;
+		blockType: BlockType;
+		resolver: MinecraftBlockResolver;
+	}
+
+	let { position, geometry = [16, 16, 16], blockType, resolver }: Props = $props();
 </script>
 
 {#await resolver.resolve()}
@@ -35,17 +39,10 @@
 				blockModel,
 				{ x: model.x, y: model.y },
 				model.uvlock ?? false,
-				blockType
+				blockType,
+				resolver.blockstateName,
+				resolver.properties
 			)}
 		/>
 	{/each}
-{:catch}
-	<!-- <T.Mesh
-		position.y={position.y * geometry[0]}
-		position.x={position.x * geometry[1]}
-		position.z={position.z * geometry[2]}
-	>
-		<T.BoxGeometry args={geometry} />
-		<T.MeshBasicMaterial />
-	</T.Mesh> -->
 {/await}

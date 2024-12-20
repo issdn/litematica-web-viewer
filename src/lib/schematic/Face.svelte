@@ -14,12 +14,18 @@
 	import { MinecraftBlock, MinecraftElement } from '$lib/render/block_renderer';
 	import type { Facing } from '../common_types';
 	import type { ResolvedFaceData } from '../minecraft_block_resolver';
+	import { Colors } from '$lib/render/colors';
 
-	export let element: MinecraftElement;
-	export let block: MinecraftBlock;
-	export let face: ResolvedFaceData & { facing: Facing };
-	export let side: Side = FrontSide;
-	export let texture: Texture | null = null;
+	interface Props {
+		element: MinecraftElement;
+		block: MinecraftBlock;
+		face: ResolvedFaceData & { facing: Facing };
+		side?: Side;
+		texture?: Texture | null;
+		tintindex: 0 | 1 | 2;
+	}
+
+	let { element, block, face, side = FrontSide, texture = null, tintindex }: Props = $props();
 
 	function setMeshFaceMaterial(mesh: Mesh, material: MeshStandardMaterial, facePos: number) {
 		if (Array.isArray(mesh.material)) {
@@ -31,27 +37,39 @@
 	}
 
 	texture = texture ?? new Texture(face.texture.asset);
+
+	function getColor() {
+		if (tintindex < 0) return undefined;
+		const filename = block.nameResolver.file;
+		if (filename == null) return undefined;
+		return Colors[block.nameResolver.file!]?.(block.properties);
+	}
 </script>
 
 <T.MeshStandardMaterial
 	{side}
-	alphaTest={0.5}
+	color={getColor()}
 	map={texture}
-	attach={(parent, self) => {
-		if (self.map != null) {
-			self.map.minFilter = NearestFilter;
-			self.map.magFilter = NearestFilter;
-			self.map.wrapS = RepeatWrapping;
-			self.map.wrapT = RepeatWrapping;
-			self.map.needsUpdate = true;
+	alphaTest={0.5}
+	attach={({ parent, ref }) => {
+		const map = (ref as unknown as MeshStandardMaterial).map;
+		if (map != null) {
+			map.minFilter = NearestFilter;
+			map.magFilter = NearestFilter;
+			map.wrapS = RepeatWrapping;
+			map.wrapT = RepeatWrapping;
+			map.needsUpdate = true;
 
 			if (block.uvlock) {
-				self.map = self.map.clone();
-				self.map.center = new Vector2(0.5, 0.5);
-				block.uvManipulation.rotateMap(face.facing, self.map);
+				map.center = new Vector2(0.5, 0.5);
+				block.uvManipulation.rotateMap(face.facing, map);
 			}
 		}
 
-		setMeshFaceMaterial(parent, self, element.getFacePosition(face.facing));
+		setMeshFaceMaterial(
+			parent as Mesh,
+			ref as unknown as MeshStandardMaterial,
+			element.getFacePosition(face.facing)
+		);
 	}}
 />

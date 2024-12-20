@@ -7,7 +7,14 @@
 	import AnimatedFace from './AnimatedFace.svelte';
 	import type { Facing } from '../common_types';
 
-	export let block: MinecraftBlock;
+	interface Props {
+		block: MinecraftBlock;
+	}
+
+	let { block }: Props = $props();
+	{
+		console.log(block.nameResolver.file);
+	}
 
 	if (block.uvlock) {
 		block!.uvManipulation.rotateTheFacesToInitialPositions();
@@ -22,7 +29,7 @@
 	<T.Mesh
 		receiveShadow
 		castShadow
-		on:create={({ ref }) => {
+		oncreate={(ref) => {
 			ref.quaternion
 				.multiplyQuaternions(
 					new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), -block.rotationRadians.x),
@@ -47,7 +54,6 @@
 						ref.quaternion
 					);
 					if (element.rotation.rescale == true) {
-						console.log(element.scaling);
 						ref.scale.setX(element.scaling);
 						ref.scale.setZ(element.scaling);
 					}
@@ -70,7 +76,7 @@
 				{#if face.texture.asset.height > face.texture.asset.width}
 					<AnimatedFace {block} {element} face={getTypedFace(face)} />
 				{:else}
-					<Face {block} {element} face={getTypedFace(face)} />
+					<Face tintindex={face.tintindex} {block} {element} face={getTypedFace(face)} />
 				{/if}
 			{/if}
 		{/each}

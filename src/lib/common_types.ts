@@ -32,17 +32,18 @@ type NBTBlockStateProperties = {
 	facing?: Facing;
 	half?: Half;
 	axis?: Axis;
-	open?: boolean;
-	powered?: boolean;
+	open?: StringBool;
+	powered?: StringBool;
 	short?: StringBool;
 	type?: string;
 	waterlogged?: StringBool;
-	east?: StringBool | Size;
-	south?: StringBool | Size;
-	north?: StringBool | Size;
-	west?: StringBool | Size;
+	east?: StringBool | Size | 'side';
+	south?: StringBool | Size | 'side';
+	north?: StringBool | Size | 'side';
+	west?: StringBool | Size | 'side';
 	up?: StringBool;
 	down?: StringBool;
+	power?: number;
 };
 
 type NBTBlockState = {
@@ -56,6 +57,7 @@ type FaceData = {
 	uv?: [number, number, number, number];
 	texture: FolderFile;
 	rotation?: number;
+	tintindex: 0 | 1 | 2;
 };
 
 type Faces = {

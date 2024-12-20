@@ -7,11 +7,12 @@ import {
 	type NBTBlockStateProperties,
 	type Variants
 } from '$lib/common_types';
-import { MinecraftBlockResolver, type MinecraftAssetsManager } from '$lib/minecraft_block_resolver';
+import { MinecraftBlockResolver } from '$lib/minecraft_block_resolver';
 import { BlockNameResolver } from '$lib/parse/block_name_resolver';
 import * as fs from 'node:fs';
 
 import SpruceLogBlockstate from '$root/static/default/assets/minecraft/blockstates/spruce_log.json';
+import type { MinecraftAssetsManager } from '$root/src/lib/assets_manager';
 
 class MockMinecraftAssetsManager implements MinecraftAssetsManager {
 	static baseUrl = './static';
@@ -347,6 +348,67 @@ describe('Resolve textures for stonecutter', () => {
 							},
 							tintindex: 0
 						}
+					}
+				}
+			]
+		};
+
+		expect(actualBlockModels[0].blockModel).toMatchObject(expected);
+	});
+});
+
+describe('Resolve textures for redstone wire', () => {
+	beforeAll(() => {
+		overrideImage(16, 16);
+	});
+
+	const blockResolver = new MinecraftBlockResolver(
+		{
+			east: 'side',
+			north: 'side',
+			power: 0,
+			south: 'side',
+			west: 'side'
+		} as NBTBlockStateProperties,
+		new MockMinecraftAssetsManager(),
+		BlockNameResolver.parse('minecraft:redstone_wire')
+	);
+
+	it('Should resolve model tree (multipart)', async () => {
+		const actualBlockModels = await blockResolver.resolve();
+
+		const expected = {
+			ambientocclusion: false,
+			textures: {
+				particle: 'block/redstone_dust_dot',
+				line: 'block/redstone_dust_dot',
+				overlay: 'block/redstone_dust_overlay'
+			},
+			elements: [
+				{
+					from: [0, 0.25, 0],
+					to: [16, 0.25, 16],
+					shade: false,
+					faces: {
+						up: {
+							uv: [0, 0, 16, 16],
+							texture: { asset: new Image(), animation: {} },
+							tintindex: 0
+						},
+						down: {
+							uv: [0, 16, 16, 0],
+							texture: { asset: new Image(), animation: {} },
+							tintindex: 0
+						}
+					}
+				},
+				{
+					from: [0, 0.25, 0],
+					to: [16, 0.25, 16],
+					shade: false,
+					faces: {
+						up: { uv: [0, 0, 16, 16], texture: { asset: new Image(), animation: {} } },
+						down: { uv: [0, 16, 16, 0], texture: { asset: new Image(), animation: {} } }
 					}
 				}
 			]
