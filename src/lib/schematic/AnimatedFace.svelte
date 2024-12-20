@@ -4,9 +4,7 @@
 	import { type Facing } from '../common_types';
 	import Face from './Face.svelte';
 	import type { ResolvedFaceData } from '../minecraft_block_resolver';
-	import { onMount } from 'svelte';
 	import { useTask } from '@threlte/core';
-	import { assets } from '$app/paths';
 
 	export let element: MinecraftElement;
 	export let block: MinecraftBlock;
@@ -33,7 +31,6 @@
 			accumulatedTime = 0;
 			frame++;
 			texture.offset = new Vector2(0, -frame / cols);
-			console.log(texture.offset);
 		}
 	});
 </script>

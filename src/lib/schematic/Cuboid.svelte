@@ -12,7 +12,6 @@
 	import { MinecraftBlockResolver } from '$lib/minecraft_block_resolver';
 	import { MinecraftBlock } from '$lib/render/block_renderer';
 
-	export let properties: NBTBlockStateProperties;
 	export let position: NBTVector3D;
 	export let geometry: SimpleVector3D = [16, 16, 16];
 	export let blockType: BlockType;
@@ -41,12 +40,12 @@
 		/>
 	{/each}
 {:catch}
-	<T.Mesh
+	<!-- <T.Mesh
 		position.y={position.y * geometry[0]}
 		position.x={position.x * geometry[1]}
 		position.z={position.z * geometry[2]}
 	>
 		<T.BoxGeometry args={geometry} />
 		<T.MeshBasicMaterial />
-	</T.Mesh>
+	</T.Mesh> -->
 {/await}

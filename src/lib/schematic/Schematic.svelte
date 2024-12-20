@@ -84,15 +84,10 @@
 {#await getBlocks()}
 	<h1>Loading</h1>
 {:then blocks}
-	{@const b = [blocks[1]]}
 	<T.Group>
-		{#each blocks as block, i}
-			<Cuboid
-				resolver={block.resolver}
-				blockType={block.blockType}
-				position={block.position}
-				properties={block.Properties}
-			/>
+		{#each blocks as block}
+			{console.log(block.Name)}
+			<Cuboid resolver={block.resolver} blockType={block.blockType} position={block.position} />
 		{/each}
 	</T.Group>
 {/await}
