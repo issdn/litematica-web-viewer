@@ -1,4 +1,10 @@
-import type { FolderFile, NamespaceFile, NamespaceFolderFile } from './resolve/block_name_resolver';
+import type {
+	FolderFile,
+	NamespaceFile,
+	NamespaceFolderFile
+} from '$lib/resolve/block_name_resolver';
+
+export type Optional<T, K extends keyof T> = Pick<Partial<T>, K> & Omit<T, K>;
 
 type FileLink = `#${string}`;
 
@@ -70,7 +76,6 @@ type Element = {
 	to: SimpleVector3D;
 	rotation?: { origin: SimpleVector3D; axis: Axis; angle: number; rescale: boolean };
 	faces: Faces;
-	shade?: boolean;
 };
 
 enum Facing {

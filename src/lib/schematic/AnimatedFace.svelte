@@ -1,10 +1,11 @@
 <script lang="ts">
 	import { type Side, FrontSide, Texture, Vector2 } from 'three';
-	import { MinecraftBlock, MinecraftElement } from '$lib/render/block_renderer';
 	import { type Facing } from '../common_types';
 	import Face from './Face.svelte';
-	import type { ResolvedFaceData } from '../minecraft_block_resolver';
+	import type { ResolvedFaceData } from '../resolve/minecraft_block_resolver';
 	import { useTask } from '@threlte/core';
+	import type { MinecraftElement } from '../render/minecraft_element';
+	import type { MinecraftBlock } from '../render/minecraft_block';
 
 	interface Props {
 		element: MinecraftElement;
@@ -16,9 +17,10 @@
 			};
 		};
 		side?: Side;
+		tintindex: 0 | 1 | 2;
 	}
 
-	let { element, block, face, side = FrontSide }: Props = $props();
+	let { element, block, face, side = FrontSide, tintindex }: Props = $props();
 
 	const texture: Texture = new Texture(face.texture.asset);
 
@@ -37,4 +39,4 @@
 	});
 </script>
 
-<Face {side} {block} {element} {face} {texture} />
+<Face {tintindex} {side} {block} {element} {face} {texture} />

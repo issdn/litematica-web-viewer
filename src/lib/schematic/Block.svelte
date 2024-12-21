@@ -1,11 +1,12 @@
 <script lang="ts">
 	import { T, useTask } from '@threlte/core';
 	import { Float32BufferAttribute, Vector3, BoxGeometry, Quaternion } from 'three';
-	import { MinecraftBlock, type FacesDataArray } from '$lib/render/block_renderer';
-	import type { ResolvedFaceData } from '$lib/minecraft_block_resolver';
+	import type { ResolvedFaceData } from '$root/src/lib/resolve/minecraft_block_resolver';
 	import Face from './Face.svelte';
 	import AnimatedFace from './AnimatedFace.svelte';
 	import type { Facing } from '../common_types';
+	import type { FacesDataArray } from '../render/minecraft_element';
+	import type { MinecraftBlock } from '../render/minecraft_block';
 
 	interface Props {
 		block: MinecraftBlock;
@@ -27,8 +28,8 @@
 
 {#each block.elements as element}
 	<T.Mesh
-		receiveShadow
-		castShadow
+		receiveShadow={element.shade}
+		castShadow={element.shade}
 		oncreate={(ref) => {
 			ref.quaternion
 				.multiplyQuaternions(

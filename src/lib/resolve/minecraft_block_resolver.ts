@@ -9,14 +9,14 @@ import type {
 	Multipart,
 	NBTBlockStateProperties,
 	Variants
-} from './common_types';
+} from '../common_types';
 
 import {
 	BlockNameResolver,
 	type FolderFile,
 	type NamespaceFolderFile
-} from './parse/block_name_resolver';
-import type { MinecraftAssetsManager } from './assets_manager';
+} from './block_name_resolver';
+import type { MinecraftAssetsManager } from '../assets_manager';
 
 export enum FileType {
 	Blockstate,

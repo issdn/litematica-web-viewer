@@ -4,9 +4,8 @@
 	import Cuboid from './Cuboid.svelte';
 	import { buildBlockStateArray, Vector3D, type Region } from '$lib/parse/schematic_parser';
 	import { OrbitControls } from '@threlte/extras';
-	import BlockTypesMap from '$lib/block_types.json';
-	import { BlockNameResolver, type NamespaceFile } from '$lib/parse/block_name_resolver';
-	import { MinecraftBlockResolver } from '$lib/minecraft_block_resolver';
+	import { BlockNameResolver, type NamespaceFile } from '$root/src/lib/resolve/block_name_resolver';
+	import { MinecraftBlockResolver } from '$root/src/lib/resolve/minecraft_block_resolver';
 	import { ServerMinecraftAssetsManager } from '$root/src/lib/assets_manager';
 
 	interface Props {
@@ -14,8 +13,6 @@
 	}
 
 	let { regions }: Props = $props();
-
-	const blockTypesMap = BlockTypesMap as { [key in NamespaceFile]: BlockType };
 
 	const max = regions
 		.map((r) => r.Position)
@@ -30,7 +27,6 @@
 	async function getBlocks() {
 		const result: (NBTBlockState & {
 			position: Vector3D;
-			blockType: BlockType;
 			resolver: MinecraftBlockResolver;
 		})[] = [];
 
@@ -41,12 +37,10 @@
 
 			await blockStateArray.traverse(async (block) => {
 				const nameResolver = BlockNameResolver.parse(block.Name);
-				const blockType = blockTypesMap[nameResolver.namespaceFile] ?? BlockType.default;
-				if (blockType != BlockType.air && blockType != BlockType.fluid) {
+				if (nameResolver.file != 'water' && nameResolver.file != 'air') {
 					result.push({
 						...block,
 						position: block.position.substract({ ...middle, y: 0 }),
-						blockType,
 						resolver: new MinecraftBlockResolver(
 							block.Properties,
 							serverAssetsManager,
@@ -74,6 +68,8 @@
 
 <T.AmbientLight />
 
+<T.DirectionalLight intensity={1} castShadow position={[4, 4, 12]} />
+
 <!-- <T.Mesh position.y={-8} rotation.x={-Math.PI / 2} receiveShadow>
 	<T.PlaneGeometry args={[50 * 16, 50 * 16]} />
 	<T.MeshStandardMaterial color="white" />
@@ -84,7 +80,7 @@
 {:then blocks}
 	<T.Group>
 		{#each blocks as block}
-			<Cuboid resolver={block.resolver} blockType={block.blockType} position={block.position} />
+			<Cuboid resolver={block.resolver} position={block.position} />
 		{/each}
 	</T.Group>
 {/await}

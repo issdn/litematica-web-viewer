@@ -9,17 +9,16 @@
 	} from '../common_types';
 	import Block from './Block.svelte';
 	import type { NBTVector3D } from '../parse/schematic_parser';
-	import { MinecraftBlockResolver } from '$lib/minecraft_block_resolver';
-	import { MinecraftBlock } from '$lib/render/block_renderer';
+	import { MinecraftBlockResolver } from '$root/src/lib/resolve/minecraft_block_resolver';
+	import { MinecraftBlock } from '../render/minecraft_block';
 
 	interface Props {
 		position: NBTVector3D;
 		geometry?: SimpleVector3D;
-		blockType: BlockType;
 		resolver: MinecraftBlockResolver;
 	}
 
-	let { position, geometry = [16, 16, 16], blockType, resolver }: Props = $props();
+	let { position, geometry = [16, 16, 16], resolver }: Props = $props();
 </script>
 
 {#await resolver.resolve()}
@@ -39,7 +38,6 @@
 				blockModel,
 				{ x: model.x, y: model.y },
 				model.uvlock ?? false,
-				blockType,
 				resolver.blockstateName,
 				resolver.properties
 			)}

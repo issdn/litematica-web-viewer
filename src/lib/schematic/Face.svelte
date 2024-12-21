@@ -11,10 +11,11 @@
 		NearestFilter,
 		RepeatWrapping
 	} from 'three';
-	import { MinecraftBlock, MinecraftElement } from '$lib/render/block_renderer';
-	import type { Facing, NBTBlockStateProperties } from '../common_types';
-	import type { ResolvedFaceData } from '../minecraft_block_resolver';
+	import type { Facing } from '../common_types';
+	import type { ResolvedFaceData } from '../resolve/minecraft_block_resolver';
 	import { getColor } from '../render/color.svelte';
+	import type { MinecraftElement } from '../render/minecraft_element';
+	import type { MinecraftBlock } from '../render/minecraft_block';
 
 	interface Props {
 		element: MinecraftElement;

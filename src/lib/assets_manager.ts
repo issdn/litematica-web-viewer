@@ -1,5 +1,5 @@
 import type { BlockModel, Blockstate, MCMeta } from './common_types';
-import type { BlockNameResolver } from './parse/block_name_resolver';
+import type { BlockNameResolver } from './resolve/block_name_resolver';
 
 export interface MinecraftAssetsManager {
 	getBlockstate(resolver: BlockNameResolver): Promise<Blockstate>;

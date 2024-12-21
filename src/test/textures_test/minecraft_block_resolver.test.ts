@@ -7,8 +7,8 @@ import {
 	type NBTBlockStateProperties,
 	type Variants
 } from '$lib/common_types';
-import { MinecraftBlockResolver } from '$lib/minecraft_block_resolver';
-import { BlockNameResolver } from '$lib/parse/block_name_resolver';
+import { MinecraftBlockResolver } from '$root/src/lib/resolve/minecraft_block_resolver';
+import { BlockNameResolver } from '$root/src/lib/resolve/block_name_resolver';
 import * as fs from 'node:fs';
 
 import SpruceLogBlockstate from '$root/static/default/assets/minecraft/blockstates/spruce_log.json';
