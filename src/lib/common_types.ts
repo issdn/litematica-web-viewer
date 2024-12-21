@@ -44,6 +44,7 @@ type NBTBlockStateProperties = {
 	up?: StringBool;
 	down?: StringBool;
 	power?: number;
+	age?: number;
 };
 
 type NBTBlockState = {

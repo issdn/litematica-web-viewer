@@ -12,9 +12,9 @@
 		RepeatWrapping
 	} from 'three';
 	import { MinecraftBlock, MinecraftElement } from '$lib/render/block_renderer';
-	import type { Facing } from '../common_types';
+	import type { Facing, NBTBlockStateProperties } from '../common_types';
 	import type { ResolvedFaceData } from '../minecraft_block_resolver';
-	import { Colors } from '$lib/render/colors';
+	import { getColor } from '../render/color.svelte';
 
 	interface Props {
 		element: MinecraftElement;
@@ -38,17 +38,17 @@
 
 	texture = texture ?? new Texture(face.texture.asset);
 
-	function getColor() {
+	function _getColor() {
 		if (tintindex < 0) return undefined;
 		const filename = block.nameResolver.file;
 		if (filename == null) return undefined;
-		return Colors[block.nameResolver.file!]?.(block.properties);
+		return getColor(filename)?.(block.properties);
 	}
 </script>
 
 <T.MeshStandardMaterial
 	{side}
-	color={getColor()}
+	color={_getColor()}
 	map={texture}
 	alphaTest={0.5}
 	attach={({ parent, ref }) => {
