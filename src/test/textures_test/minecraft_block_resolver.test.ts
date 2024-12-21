@@ -12,7 +12,7 @@ import { BlockNameResolver } from '$root/src/lib/resolve/block_name_resolver';
 import * as fs from 'node:fs';
 
 import SpruceLogBlockstate from '$root/static/default/assets/minecraft/blockstates/spruce_log.json';
-import type { MinecraftAssetsManager } from '$root/src/lib/assets_manager';
+import type { MinecraftAssetsManager } from '$root/src/lib/assets/assets_manager';
 
 class MockMinecraftAssetsManager implements MinecraftAssetsManager {
 	static baseUrl = './static';

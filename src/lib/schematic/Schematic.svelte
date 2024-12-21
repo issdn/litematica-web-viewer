@@ -6,7 +6,7 @@
 	import { OrbitControls } from '@threlte/extras';
 	import { BlockNameResolver, type NamespaceFile } from '$root/src/lib/resolve/block_name_resolver';
 	import { MinecraftBlockResolver } from '$root/src/lib/resolve/minecraft_block_resolver';
-	import { ServerMinecraftAssetsManager } from '$root/src/lib/assets_manager';
+	import { ServerMinecraftAssetsManager } from '$root/src/lib/textures/assets_manager';
 
 	interface Props {
 		regions: Region<NBTBlockState>[];
