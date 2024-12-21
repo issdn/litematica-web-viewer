@@ -9,7 +9,7 @@
 	} from '../common_types';
 	import Block from './Block.svelte';
 	import type { NBTVector3D } from '../parse/schematic_parser';
-	import { MinecraftBlockResolver } from '$root/src/lib/resolve/minecraft_block_resolver';
+	import { MinecraftBlockResolver } from '$lib/resolve/minecraft_block_resolver';
 	import { MinecraftBlock } from '../render/minecraft_block';
 
 	interface Props {

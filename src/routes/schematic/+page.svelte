@@ -2,7 +2,7 @@
 	import { Canvas } from '@threlte/core';
 	import Schematic from '../../lib/schematic/Schematic.svelte';
 	import { WebGLRenderer } from 'three';
-	import { setBiome } from '$root/src/lib/render/biome.svelte';
+	import { setBiome } from '$lib/render/biome.svelte';
 
 	let { data } = $props();
 

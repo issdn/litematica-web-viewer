@@ -4,9 +4,9 @@
 	import Cuboid from './Cuboid.svelte';
 	import { buildBlockStateArray, Vector3D, type Region } from '$lib/parse/schematic_parser';
 	import { OrbitControls } from '@threlte/extras';
-	import { BlockNameResolver, type NamespaceFile } from '$root/src/lib/resolve/block_name_resolver';
-	import { MinecraftBlockResolver } from '$root/src/lib/resolve/minecraft_block_resolver';
-	import { ServerMinecraftAssetsManager } from '$root/src/lib/textures/assets_manager';
+	import { BlockNameResolver, type NamespaceFile } from '$lib/resolve/block_name_resolver';
+	import { MinecraftBlockResolver } from '$lib/resolve/minecraft_block_resolver';
+	import { ServerMinecraftAssetsManager } from '$lib/textures/assets_manager';
 
 	interface Props {
 		regions: Region<NBTBlockState>[];
