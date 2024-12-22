@@ -61,6 +61,14 @@ class Vector3D {
 		});
 	}
 
+	multiply(other: NBTVector3D) {
+		return Vector3D.fromNBTVector3D({
+			x: this.x * other.x,
+			y: this.y * other.y,
+			z: this.z * other.z
+		});
+	}
+
 	add(other: NBTVector3D) {
 		return Vector3D.fromNBTVector3D({
 			x: this.x + other.x,

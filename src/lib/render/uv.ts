@@ -1,87 +1,89 @@
 import type { Texture } from 'three';
-import type { Facing } from '$lib/types/common';
-import type { MinecraftBlock } from './minecraft_block';
+import { Facing } from '$lib/types/common';
 import type { ResolvedFaceData } from '../resolve/minecraft_block_resolver';
-import type { Optional } from '../types/common';
+import type { BlockRotation, Optional } from '../types/common';
 
-export function uvManipulation(block: MinecraftBlock) {
-	function rotateTheFacesToInitialPositions() {
-		if (block.rotationDegrees.x != 0 && block.rotationDegrees.y != 0) {
-			if (block.rotationDegrees.x != 0) {
-				const xSteps = block.rotationDegrees.x / 90;
+export function uvManipulation() {
+	const xAxisFaces = [Facing.North, Facing.Up, Facing.South, Facing.Down];
+	const yAxisFaces = [Facing.West, Facing.Down, Facing.East, Facing.Up];
+
+	function rotateTheFacesToInitialPositions(degreesRotation: Required<BlockRotation>) {
+		if (degreesRotation.x != 0 && degreesRotation.y != 0) {
+			if (degreesRotation.x != 0) {
+				const xSteps = degreesRotation.x / 90;
 				for (let i = 0; i < xSteps; i++) {
-					block.yAxisFaces[1] = block.xAxisFaces[2];
-					block.yAxisFaces[3] = block.xAxisFaces[0];
-					const elem = block.xAxisFaces.pop();
-					block.xAxisFaces.unshift(elem!);
+					yAxisFaces[1] = xAxisFaces[2];
+					yAxisFaces[3] = xAxisFaces[0];
+					const elem = xAxisFaces.pop();
+					xAxisFaces.unshift(elem!);
 				}
 			}
 
-			if (block.rotationDegrees.y != 0) {
-				const ySteps = block.rotationDegrees.y / 90;
+			if (degreesRotation.y != 0) {
+				const ySteps = degreesRotation.y / 90;
 				for (let i = 0; i < ySteps; i++) {
-					block.xAxisFaces[1] = block.yAxisFaces[3];
-					block.xAxisFaces[3] = block.yAxisFaces[1];
-					const elem = block.yAxisFaces.shift();
-					block.yAxisFaces.push(elem!);
+					xAxisFaces[1] = yAxisFaces[3];
+					xAxisFaces[3] = yAxisFaces[1];
+					const elem = yAxisFaces.shift();
+					yAxisFaces.push(elem!);
 				}
 			}
-		} else if (block.rotationDegrees.x != 0 || block.rotationDegrees.y != 0) {
-			// if (block.rotationDegrees.x != 0) {
-			// 	const xSteps = block.rotationDegrees.x / 90;
+		} else if (degreesRotation.x != 0 || degreesRotation.y != 0) {
+			// if (degreesRotation.x != 0) {
+			// 	const xSteps = degreesRotation.x / 90;
 			// 	for (let i = 0; i < xSteps; i++) {
-			// 		const tempY = block.yAxisFaces;
-			// 		block.yAxisFaces[0] = block.xAxisFaces[0];
-			// 		block.yAxisFaces[1] = block.xAxisFaces[1];
-			// 		block.xAxisFaces[3] = tempY[0];
-			// 		block.xAxisFaces[0] = tempY[3];
+			// 		const tempY = yAxisFaces;
+			// 		yAxisFaces[0] = xAxisFaces[0];
+			// 		yAxisFaces[1] = xAxisFaces[1];
+			// 		xAxisFaces[3] = tempY[0];
+			// 		xAxisFaces[0] = tempY[3];
 			// 	}
 			// }
-			if (block.rotationDegrees.y != 0) {
-				const ySteps = block.rotationDegrees.y / 90;
+			if (degreesRotation.y != 0) {
+				const ySteps = degreesRotation.y / 90;
 				for (let i = 0; i < ySteps; i++) {
-					const tempY = [...block.yAxisFaces];
-					block.yAxisFaces[0] = block.xAxisFaces[0];
-					block.yAxisFaces[2] = block.xAxisFaces[2];
-					block.xAxisFaces[2] = tempY[0];
-					block.xAxisFaces[0] = tempY[2];
+					const tempY = [...yAxisFaces];
+					yAxisFaces[0] = xAxisFaces[0];
+					yAxisFaces[2] = xAxisFaces[2];
+					xAxisFaces[2] = tempY[0];
+					xAxisFaces[0] = tempY[2];
 				}
 			}
 		}
 	}
 
-	function rotateMap(facing: Facing, map: Texture) {
-		const hasXRotation = block.rotationRadians.x != 0;
-		const hasYRotation = block.rotationRadians.y != 0;
+	function rotateMap(facing: Facing, map: Texture, radiansRotation: Required<BlockRotation>) {
+		const hasXRotation = radiansRotation.x != 0;
+		const hasYRotation = radiansRotation.y != 0;
 		if (hasXRotation && hasYRotation) {
-			if (facing == block.yAxisFaces[3]) {
-				map.rotation = block.rotationRadians.y;
+			if (facing == yAxisFaces[3]) {
+				map.rotation = radiansRotation.y;
 			}
-			if (facing == block.xAxisFaces[2]) {
-				map.rotation = -block.rotationRadians.y;
+			if (facing == xAxisFaces[2]) {
+				map.rotation = -radiansRotation.y;
 			}
 
-			if (facing == block.yAxisFaces[0]) {
-				map.rotation = block.rotationRadians.x;
+			if (facing == yAxisFaces[0]) {
+				map.rotation = radiansRotation.x;
 			}
-			if (facing == block.yAxisFaces[2]) {
-				map.rotation = -block.rotationRadians.x;
+			if (facing == yAxisFaces[2]) {
+				map.rotation = -radiansRotation.x;
 			}
 		} else {
 			if (hasYRotation) {
-				if (facing == block.xAxisFaces[1]) {
-					map.rotation = block.rotationRadians.y;
+				if (facing == xAxisFaces[1]) {
+					map.rotation = radiansRotation.y;
 				}
-				if (facing == block.xAxisFaces[3]) {
-					map.rotation = -block.rotationRadians.y;
+				if (facing == xAxisFaces[3]) {
+					map.rotation = -radiansRotation.y;
 				}
 			}
 			if (hasXRotation) {
-				if (facing == block.yAxisFaces[0]) {
-					map.rotation = block.rotationRadians.x;
+				if (facing == yAxisFaces[0]) {
+					map.rotation = radiansRotation.x;
 				}
-				if (facing == block.yAxisFaces[2]) {
-					map.rotation = -block.rotationRadians.x;
+				if (facing == yAxisFaces[2]) {
+					map.rotation = -radiansRotation.x;
 				}
 			}
 		}

@@ -1,82 +1,50 @@
 <script lang="ts">
 	import { T } from '@threlte/core';
-	import { Float32BufferAttribute, Vector3, BoxGeometry, Quaternion } from 'three';
-	import type { ResolvedFaceData } from '$lib/resolve/minecraft_block_resolver';
-	import Face from './Face.svelte';
-	import AnimatedFace from './AnimatedFace.svelte';
-	import type { Facing } from '$lib/types/common';
-	import type { FacesDataArray } from '../render/minecraft_element';
-	import type { MinecraftBlock } from '../render/minecraft_block';
+	import type { NBTVector3D } from '../parse/schematic_parser';
+	import { MinecraftBlockResolver } from '$root/src/lib/resolve/minecraft_block_resolver';
+	import Model from './Model.svelte';
+	import { BlockNameResolver, type NamespaceFile } from '../resolve/block_name_resolver';
+	import type { FaceData, NBTBlockStateProperties } from '../types/common';
+	import { useTexturepack } from '../resolve/texturepack.svelte';
+	import { getColor } from '../render/color.svelte';
 
 	interface Props {
-		block: MinecraftBlock;
+		position: NBTVector3D;
+		name: NamespaceFile;
+		properties: NBTBlockStateProperties;
 	}
 
-	let { block }: Props = $props();
+	let { position, name, properties }: Props = $props();
 
-	if (block.uvlock) {
-		block!.uvManipulation.rotateTheFacesToInitialPositions();
-	}
+	let { assetsManager } = useTexturepack();
 
-	function getTypedFace(face: FacesDataArray[keyof FacesDataArray]) {
-		return face as ResolvedFaceData & { facing: Facing };
+	const resolver = new MinecraftBlockResolver(
+		properties,
+		assetsManager,
+		BlockNameResolver.parse(name)
+	);
+
+	function getElementColor(tintindex: FaceData['tintindex']) {
+		if (tintindex < 0) return undefined;
+		return getColor(name)?.(properties);
 	}
 </script>
 
-{#each block.elements as element}
-	<T.Mesh
-		receiveShadow={element.shade}
-		castShadow={element.shade}
-		oncreate={(ref) => {
-			ref.quaternion
-				.multiplyQuaternions(
-					new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), -block.rotationRadians.x),
-					ref.quaternion
-				)
-				.multiplyQuaternions(
-					new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), -block.rotationRadians.y),
-					ref.quaternion
-				);
-			let position = element.getPositionInsideBlock();
-			ref.position.set(...position.values);
-			ref.geometry = new BoxGeometry(...element.size, 1, 1, 1)
-				.toNonIndexed()
-				.setAttribute(
-					'uv',
-					new Float32BufferAttribute(block.uvManipulation.translateUV(element.facesDataArray), 2)
-				);
-			if (element.rotation != null) {
-				if (element.rotation.axis == 'y') {
-					ref.quaternion.multiplyQuaternions(
-						new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), element.rotationAngle),
-						ref.quaternion
-					);
-					if (element.rotation.rescale == true) {
-						ref.scale.setX(element.scaling);
-						ref.scale.setZ(element.scaling);
-					}
-				}
-				if (element.rotation.axis == 'x') {
-					ref.quaternion.multiplyQuaternions(
-						new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), element.rotationAngle),
-						ref.quaternion
-					);
-					if (element.rotation.rescale == true) {
-						ref.scale.setX(element.scaling);
-						ref.scale.setY(element.scaling);
-					}
-				}
-			}
-		}}
-	>
-		{#each Object.values(element.facesDataArray) as face}
-			{#if face.texture != undefined}
-				{#if face.texture.asset.height > face.texture.asset.width}
-					<AnimatedFace {block} {element} face={getTypedFace(face)} />
-				{:else}
-					<Face tintindex={face.tintindex} {block} {element} face={getTypedFace(face)} />
-				{/if}
-			{/if}
-		{/each}
+{#await resolver.resolve()}
+	<T.Mesh position.y={position.y * 16} position.x={position.x * 16} position.z={position.z * 16}>
+		<T.BoxGeometry args={[16, 16, 16]} />
+		<T.MeshBasicMaterial color="black" />
 	</T.Mesh>
-{/each}
+{:then blockDataArray}
+	{#each blockDataArray as { blockModel, model }}
+		<Model
+			blockRotation={{ x: model.x ?? 0, y: model.y ?? 0 }}
+			uvlock={model.uvlock ?? false}
+			blockPosition={position}
+			{getElementColor}
+			{blockModel}
+		/>
+	{/each}
+{:catch e}
+	{console.log(e)}
+{/await}

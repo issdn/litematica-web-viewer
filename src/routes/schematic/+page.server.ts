@@ -2,7 +2,7 @@ import type { Regions } from '$lib/parse/schematic_parser';
 import { parse, simplify } from 'prismarine-nbt';
 import { Buffer } from 'buffer';
 import type { NBTBlockState, Size } from '$lib/types/common';
-import test from './animations.litematic?url';
+import test from './testcase0.litematic?url';
 
 function stringToArray(val: string | null | undefined) {
 	if (val?.includes(',')) {

@@ -62,7 +62,6 @@ export class MinecraftBlockResolver {
 	properties: NBTBlockStateProperties;
 	minecraftAssetsManager: MinecraftAssetsManager;
 	blockstateName: BlockNameResolver;
-
 	blockData?: BlockData[];
 
 	constructor(
@@ -78,11 +77,11 @@ export class MinecraftBlockResolver {
 	async resolve() {
 		const blockstate = await this.minecraftAssetsManager.getBlockstate(this.blockstateName);
 
-		let models: Multipart['multipart'][number]['apply'];
+		let models: Model[];
 		if (Object.keys(blockstate)[0] == 'multipart') {
 			models = this.fromMultipart(blockstate as Multipart);
 		} else {
-			models = this.fromVariants(blockstate as Variants);
+			models = [this.fromVariants(blockstate as Variants)];
 		}
 
 		const blockModels = await Promise.all(
@@ -128,7 +127,7 @@ export class MinecraftBlockResolver {
 		return await this.recursiveResolveBlockModelTree(blockModelWithTexturesResolved);
 	}
 
-	fromVariants(blockstate: Variants): Model[] {
+	fromVariants(blockstate: Variants): Model {
 		const variantValues = Object.entries(blockstate.variants).filter(([key]) =>
 			Object.entries(this.readVariantKey(key)).every(
 				([key, value]) => this.properties[key as keyof NBTBlockStateProperties] == value
@@ -138,7 +137,7 @@ export class MinecraftBlockResolver {
 			throw new ResolvingError('No matching model for properties specified in the schematic.');
 		}
 		const result = variantValues[0][1];
-		return Array.isArray(result) ? [getRandomArrayItem(result)] : [result];
+		return Array.isArray(result) ? getRandomArrayItem(result) : result;
 	}
 
 	getPropertyKeys() {

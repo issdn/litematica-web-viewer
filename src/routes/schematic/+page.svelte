@@ -2,10 +2,7 @@
 	import { Canvas } from '@threlte/core';
 	import Schematic from '../../lib/schematic/Schematic.svelte';
 	import { WebGLRenderer } from 'three';
-	import { setBiome } from '$lib/render/biome.svelte';
-	import { ServerMinecraftAssetsManager } from '$root/src/lib/textures/assets_manager';
-	import { ClientMinecraftAssetsManager } from '$root/src/lib/textures/client_assets_manager';
-
+	import { useTexturepack } from '$root/src/lib/resolve/texturepack.svelte';
 	let { data } = $props();
 
 	const regions = Object.values(data);
@@ -13,20 +10,16 @@
 	let innerWidth = $state(0);
 	let innerHeight = $state(0);
 
+	const { setFiles } = useTexturepack();
+
 	let files: FileList | null | undefined = $state();
 
-	const serverAssetsManager = new ServerMinecraftAssetsManager('default');
-	let assetsManager = $derived(
-		files == null
-			? serverAssetsManager
-			: new ClientMinecraftAssetsManager(files, serverAssetsManager)
-	);
+	setFiles(files);
 </script>
 
 <svelte:window bind:innerWidth bind:innerHeight />
 
 <input
-	bind:files
 	webkitdirectory
 	multiple
 	onchange={(e) => console.log(e)}
@@ -46,7 +39,7 @@
 			});
 		}}
 	>
-		<Schematic {assetsManager} {regions} />
+		<Schematic {regions} />
 	</Canvas>
 </div>
 

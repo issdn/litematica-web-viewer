@@ -1,5 +1,5 @@
 import { Facing, type SimpleVector3D, type Element } from '$lib/types/common';
-import { Vector3D } from '$lib/parse/schematic_parser';
+import { Vector3D, type NBTVector3D } from '$lib/parse/schematic_parser';
 import { Vector3 } from 'three';
 import { degToRad } from 'three/src/math/MathUtils.js';
 import type {
@@ -7,8 +7,7 @@ import type {
 	ResolvedFaceData,
 	ResolvedFaces
 } from '../resolve/minecraft_block_resolver';
-import type { MinecraftBlock } from './minecraft_block';
-import type { Optional } from '$lib/types/common';
+import type { BlockRotation, Optional } from '$lib/types/common';
 
 export type FacesDataArray = (Optional<Required<ResolvedFaceData>, 'texture'> & {
 	facing: Facing;
@@ -21,7 +20,6 @@ export class MinecraftElement {
 	faces: ResolvedFaces;
 	size: SimpleVector3D;
 	shade: boolean;
-	blockParent: MinecraftBlock;
 	facesDataArray!: FacesDataArray;
 
 	constructor(
@@ -29,25 +27,20 @@ export class MinecraftElement {
 		to: SimpleVector3D,
 		rotation: Element['rotation'],
 		faces: ResolvedFaces,
-		blockParent: MinecraftBlock,
 		shade: boolean = true
 	) {
 		this.from = from;
 		this.to = to;
 		this.rotation = rotation;
 		this.faces = faces;
+		this.shade = shade;
 		this.size = [to[0] - from[0], to[1] - from[1], to[2] - from[2]];
-		this.blockParent = blockParent;
 		this.createFacesDataArray();
 		this.generateUVs();
-		this.shade = shade;
 	}
 
-	static fromElement(
-		{ from, to, rotation, faces, shade }: ResolvedElements[number],
-		block: MinecraftBlock
-	) {
-		return new MinecraftElement(from, to, rotation, faces, block, shade);
+	static fromElement({ from, to, rotation, faces, shade }: ResolvedElements[number]) {
+		return new MinecraftElement(from, to, rotation, faces, shade);
 	}
 
 	get rotationAngle() {
@@ -147,27 +140,30 @@ export class MinecraftElement {
 		}
 	}
 
-	getPositionInsideBlock() {
+	getPositionInsideBlock(
+		radiansBlockRotation: Required<BlockRotation>,
+		blockPosition: NBTVector3D
+	) {
 		const padding = new Vector3(16, 16, 16)
 			.sub(new Vector3(...this.size))
 			.divide(new Vector3(2, 2, 2));
 
 		const fromRotated = new Vector3(...this.from);
 
-		if (this.blockParent.rotationRadians.x != 0) {
-			padding.applyAxisAngle(new Vector3(1, 0, 0), -this.blockParent.rotationRadians.x);
-			fromRotated.applyAxisAngle(new Vector3(1, 0, 0), -this.blockParent.rotationRadians.x);
+		if (radiansBlockRotation.x != 0) {
+			padding.applyAxisAngle(new Vector3(1, 0, 0), -radiansBlockRotation.x);
+			fromRotated.applyAxisAngle(new Vector3(1, 0, 0), -radiansBlockRotation.x);
 		}
 
-		if (this.blockParent.rotationRadians.y != 0) {
-			padding.applyAxisAngle(new Vector3(0, 1, 0), -this.blockParent.rotationRadians.y);
-			fromRotated.applyAxisAngle(new Vector3(0, 1, 0), -this.blockParent.rotationRadians.y);
+		if (radiansBlockRotation.y != 0) {
+			padding.applyAxisAngle(new Vector3(0, 1, 0), -radiansBlockRotation.y);
+			fromRotated.applyAxisAngle(new Vector3(0, 1, 0), -radiansBlockRotation.y);
 		}
 
 		return new Vector3D(
-			this.blockParent.position.x * 16 - padding.x + fromRotated.x,
-			this.blockParent.position.y * 16 - padding.y + fromRotated.y,
-			this.blockParent.position.z * 16 - padding.z + fromRotated.z
+			blockPosition.x * 16 - padding.x + fromRotated.x,
+			blockPosition.y * 16 - padding.y + fromRotated.y,
+			blockPosition.z * 16 - padding.z + fromRotated.z
 		);
 	}
 }

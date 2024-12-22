@@ -13,64 +13,61 @@
 	} from 'three';
 	import type { Facing } from '$lib/types/common';
 	import type { ResolvedFaceData } from '../resolve/minecraft_block_resolver';
-	import { getColor } from '../render/color.svelte';
 	import type { MinecraftElement } from '../render/minecraft_element';
-	import type { MinecraftBlock } from '../render/minecraft_block';
+	import type { Color } from '../render/color.svelte';
 
 	interface Props {
 		element: MinecraftElement;
-		block: MinecraftBlock;
 		face: ResolvedFaceData & { facing: Facing };
 		side?: Side;
 		texture?: Texture | null;
-		tintindex: 0 | 1 | 2;
+		materialColor: Color | undefined;
+		adjustTexture: (texture: Texture) => void;
 	}
 
-	let { element, block, face, side = FrontSide, texture = null, tintindex }: Props = $props();
+	let {
+		element,
+		face,
+		side = FrontSide,
+		texture = null,
+		materialColor,
+		adjustTexture
+	}: Props = $props();
 
-	function setMeshFaceMaterial(mesh: Mesh, material: MeshStandardMaterial, facePos: number) {
-		if (Array.isArray(mesh.material)) {
-			mesh.material[facePos] = material;
-		} else {
-			(mesh.material as unknown as (Material | null)[]) = [null, null, null, null, null, null];
-			(mesh.material as unknown as (Material | null)[])[facePos] = material;
-		}
-	}
+	const position = element.getFacePosition(face.facing);
 
 	texture = texture ?? new Texture(face.texture.asset);
 
-	function _getColor() {
-		if (tintindex < 0) return undefined;
-		const filename = block.nameResolver.file;
-		if (filename == null) return undefined;
-		return getColor(filename)?.(block.properties);
-	}
+	texture.minFilter = NearestFilter;
+	texture.magFilter = NearestFilter;
+	texture.wrapS = RepeatWrapping;
+	texture.wrapT = RepeatWrapping;
+	texture.needsUpdate = true;
+
+	adjustTexture(texture);
 </script>
 
 <T.MeshStandardMaterial
 	{side}
-	color={_getColor()}
+	color={materialColor}
 	map={texture}
 	alphaTest={0.5}
 	attach={({ parent, ref }) => {
-		const map = (ref as unknown as MeshStandardMaterial).map;
-		if (map != null) {
-			map.minFilter = NearestFilter;
-			map.magFilter = NearestFilter;
-			map.wrapS = RepeatWrapping;
-			map.wrapT = RepeatWrapping;
-			map.needsUpdate = true;
-
-			if (block.uvlock) {
-				map.center = new Vector2(0.5, 0.5);
-				block.uvManipulation.rotateMap(face.facing, map);
-			}
+		let material = (parent as Mesh).material as unknown as (Material | null)[];
+		if (Array.isArray(material)) {
+			((parent as Mesh).material as unknown as (Material | null)[])[position] =
+				ref as unknown as MeshStandardMaterial;
+		} else {
+			((parent as Mesh).material as unknown as (Material | null)[]) = [
+				null,
+				null,
+				null,
+				null,
+				null,
+				null
+			];
+			((parent as Mesh).material as unknown as (Material | null)[])[position] =
+				ref as unknown as MeshStandardMaterial;
 		}
-
-		setMeshFaceMaterial(
-			parent as Mesh,
-			ref as unknown as MeshStandardMaterial,
-			element.getFacePosition(face.facing)
-		);
 	}}
 />

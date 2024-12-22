@@ -1,43 +1,34 @@
 <script lang="ts">
-	import { type Side, FrontSide, Texture, Vector2 } from 'three';
-	import { type Facing } from '$lib/types/common';
+	import { FrontSide, Texture, Vector2 } from 'three';
 	import Face from './Face.svelte';
 	import type { ResolvedFaceData } from '../resolve/minecraft_block_resolver';
 	import { useTask } from '@threlte/core';
-	import type { MinecraftElement } from '../render/minecraft_element';
-	import type { MinecraftBlock } from '../render/minecraft_block';
+	import type { Snippet } from 'svelte';
 
 	interface Props {
-		element: MinecraftElement;
-		block: MinecraftBlock;
-		face: Omit<ResolvedFaceData, 'texture'> & { facing: Facing } & {
-			texture: {
-				asset: ResolvedFaceData['texture']['asset'];
-				animation: NonNullable<ResolvedFaceData['texture']['animation']>;
-			};
-		};
-		side?: Side;
-		tintindex: 0 | 1 | 2;
+		getFace: Snippet<[texture: Texture]>;
+		asset: ResolvedFaceData['texture']['asset'];
+		animation: NonNullable<ResolvedFaceData['texture']['animation']>;
 	}
 
-	let { element, block, face, side = FrontSide, tintindex }: Props = $props();
+	let { getFace, asset, animation }: Props = $props();
 
-	const texture: Texture = new Texture(face.texture.asset);
+	const texture: Texture = new Texture(asset);
 
-	const animation = face.texture.animation.animation;
+	const animationData = animation.animation;
 
-	const cols = face.texture.asset.height / face.texture.asset.width;
-	const targetInterval = 0.05 * (animation.frametime ?? 1);
+	const cols = asset.height / asset.width;
+	const targetInterval = 0.05 * (animationData.frametime ?? 1);
 
 	function getPredefinedFrame(frame: number) {
-		return animation.frames![frame];
+		return animationData.frames![frame];
 	}
 
 	function getNextFrame(frame: number) {
 		return frame;
 	}
 
-	const frameFunction = animation.frames != null ? getPredefinedFrame : getNextFrame;
+	const frameFunction = animationData.frames != null ? getPredefinedFrame : getNextFrame;
 
 	let frame = 0;
 	let accumulatedTime = 0;
@@ -52,4 +43,4 @@
 	});
 </script>
 
-<Face {tintindex} {side} {block} {element} {face} {texture} />
+{@render getFace(texture)}

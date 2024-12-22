@@ -62,3 +62,5 @@ const colorStore = $derived({
 } as const);
 
 export const getColor = (k: string) => colorStore[k as keyof typeof colorStore];
+
+export type Color = ReturnType<(typeof colorStore)[keyof typeof colorStore]>;
