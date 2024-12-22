@@ -33,20 +33,20 @@ class BlockNameResolver {
 		this.folder = folder;
 	}
 
-	getRelativeBlockstatePath() {
-		return `/default/assets/minecraft/blockstates/${this.file}.json`;
+	get relativeBlockstatePath() {
+		return `assets/minecraft/blockstates/${this.file}.json`;
 	}
 
-	getRelativeBlockModelPath() {
-		return `/default/assets/minecraft/models/block/${this.file}.json`;
+	get relativeBlockModelPath() {
+		return `assets/minecraft/models/block/${this.file}.json`;
 	}
 
-	getRelativeTexturePath() {
-		return `/default/assets/minecraft/textures/block/${this.file}.png`;
+	get relativeTexturePath() {
+		return `assets/minecraft/textures/block/${this.file}.png`;
 	}
 
-	getRelativeMCMetaPath() {
-		return `/default/assets/minecraft/textures/block/${this.file}.png.mcmeta`;
+	get relativeMCMetaPath() {
+		return `assets/minecraft/textures/block/${this.file}.png.mcmeta`;
 	}
 
 	// minecraft:block/oak_button

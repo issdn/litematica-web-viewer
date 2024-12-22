@@ -11,7 +11,7 @@
 		NearestFilter,
 		RepeatWrapping
 	} from 'three';
-	import type { Facing } from '../common_types';
+	import type { Facing } from '$lib/types/common';
 	import type { ResolvedFaceData } from '../resolve/minecraft_block_resolver';
 	import { getColor } from '../render/color.svelte';
 	import type { MinecraftElement } from '../render/minecraft_element';

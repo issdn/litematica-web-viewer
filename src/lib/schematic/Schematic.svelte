@@ -1,18 +1,22 @@
 <script lang="ts">
 	import { T, useLoader, useThrelte } from '@threlte/core';
-	import { BlockType, Facing, type Blockstate, type NBTBlockState } from '$lib/common_types';
+	import { BlockType, Facing, type Blockstate, type NBTBlockState } from '$lib/types/common';
 	import Cuboid from './Cuboid.svelte';
 	import { buildBlockStateArray, Vector3D, type Region } from '$lib/parse/schematic_parser';
 	import { OrbitControls } from '@threlte/extras';
 	import { BlockNameResolver, type NamespaceFile } from '$lib/resolve/block_name_resolver';
 	import { MinecraftBlockResolver } from '$lib/resolve/minecraft_block_resolver';
-	import { ServerMinecraftAssetsManager } from '$lib/textures/assets_manager';
+	import {
+		ServerMinecraftAssetsManager,
+		type MinecraftAssetsManager
+	} from '$lib/textures/assets_manager';
 
 	interface Props {
 		regions: Region<NBTBlockState>[];
+		assetsManager: MinecraftAssetsManager;
 	}
 
-	let { regions }: Props = $props();
+	let { regions, assetsManager }: Props = $props();
 
 	const max = regions
 		.map((r) => r.Position)
@@ -21,8 +25,6 @@
 		});
 
 	const middle = Vector3D.fromNBTVector3D(max).divide({ x: 2, z: 2, y: 1 });
-
-	const serverAssetsManager = new ServerMinecraftAssetsManager();
 
 	async function getBlocks() {
 		const result: (NBTBlockState & {
@@ -43,7 +45,7 @@
 						position: block.position.substract({ ...middle, y: 0 }),
 						resolver: new MinecraftBlockResolver(
 							block.Properties,
-							serverAssetsManager,
+							assetsManager,
 							BlockNameResolver.parse(block.Name)
 						)
 					});

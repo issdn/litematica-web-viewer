@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { type Side, FrontSide, Texture, Vector2 } from 'three';
-	import { type Facing } from '../common_types';
+	import { type Facing } from '$lib/types/common';
 	import Face from './Face.svelte';
 	import type { ResolvedFaceData } from '../resolve/minecraft_block_resolver';
 	import { useTask } from '@threlte/core';
@@ -24,8 +24,21 @@
 
 	const texture: Texture = new Texture(face.texture.asset);
 
-	const cols = face.texture.asset.height / 16;
-	const targetInterval = 0.05 * (face.texture.animation.animation.frametime ?? 1);
+	const animation = face.texture.animation.animation;
+
+	const cols = face.texture.asset.height / face.texture.asset.width;
+	const targetInterval = 0.05 * (animation.frametime ?? 1);
+
+	function getPredefinedFrame(frame: number) {
+		return animation.frames![frame];
+	}
+
+	function getNextFrame(frame: number) {
+		return frame;
+	}
+
+	const frameFunction = animation.frames != null ? getPredefinedFrame : getNextFrame;
+
 	let frame = 0;
 	let accumulatedTime = 0;
 	useTask((delta) => {
@@ -34,7 +47,7 @@
 		if (accumulatedTime >= targetInterval) {
 			accumulatedTime = 0;
 			frame++;
-			texture.offset = new Vector2(0, -frame / cols);
+			texture.offset = new Vector2(0, -frameFunction(frame % cols) / cols);
 		}
 	});
 </script>

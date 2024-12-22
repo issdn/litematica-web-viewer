@@ -1,4 +1,4 @@
-import type { SimpleVector3D } from '$lib/common_types';
+import type { SimpleVector3D } from '$lib/types/common';
 
 type BlockStates = number[][];
 type BlockStatePalette<T extends object> = T[];

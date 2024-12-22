@@ -6,10 +6,13 @@
 		BlockType,
 		type SimpleVector3D,
 		type BlockModel
-	} from '../common_types';
+	} from '$lib/types/common';
 	import Block from './Block.svelte';
 	import type { NBTVector3D } from '../parse/schematic_parser';
-	import { MinecraftBlockResolver } from '$lib/resolve/minecraft_block_resolver';
+	import {
+		MinecraftBlockResolver,
+		type BlockData
+	} from '$root/src/lib/resolve/minecraft_block_resolver';
 	import { MinecraftBlock } from '../render/minecraft_block';
 
 	interface Props {
@@ -30,8 +33,8 @@
 		<T.BoxGeometry args={geometry} />
 		<T.MeshBasicMaterial color="black" />
 	</T.Mesh>
-{:then blockData}
-	{#each blockData as { blockModel, model }}
+{:then blockDataArray}
+	{#each blockDataArray as { blockModel, model }}
 		<Block
 			block={new MinecraftBlock(
 				position,
@@ -43,4 +46,6 @@
 			)}
 		/>
 	{/each}
+{:catch e}
+	{console.log(e)}
 {/await}

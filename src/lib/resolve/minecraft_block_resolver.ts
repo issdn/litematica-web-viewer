@@ -9,7 +9,7 @@ import type {
 	Multipart,
 	NBTBlockStateProperties,
 	Variants
-} from '../common_types';
+} from '$lib/types/common';
 
 import {
 	BlockNameResolver,
@@ -18,7 +18,7 @@ import {
 } from './block_name_resolver';
 import type { MinecraftAssetsManager } from '../textures/assets_manager';
 
-export enum FileType {
+export const enum FileType {
 	Blockstate,
 	BlockModel,
 	Texture,
@@ -41,13 +41,15 @@ export type ResolvedBlockModel = Omit<Required<BlockModel>, 'elements'> & {
 	elements: ResolvedElements;
 };
 
+export type BlockData = { model: Model; blockModel: Required<ResolvedBlockModel> };
+
 type PropertyKeys = Record<string, NBTBlockStateProperties[keyof NBTBlockStateProperties]>;
 
 function getRandomArrayItem<T>(arr: T[]) {
 	return arr[Math.floor(Math.random() * arr.length)];
 }
 
-class ResolvingError extends Error {
+export class ResolvingError extends Error {
 	detail: string;
 
 	constructor(detail: string, message?: string, options?: ErrorOptions) {
@@ -61,7 +63,7 @@ export class MinecraftBlockResolver {
 	minecraftAssetsManager: MinecraftAssetsManager;
 	blockstateName: BlockNameResolver;
 
-	blockData?: { model: Model; blockModel: Required<ResolvedBlockModel> }[];
+	blockData?: BlockData[];
 
 	constructor(
 		properties: NBTBlockStateProperties,
@@ -76,7 +78,7 @@ export class MinecraftBlockResolver {
 	async resolve() {
 		const blockstate = await this.minecraftAssetsManager.getBlockstate(this.blockstateName);
 
-		let models: Model[];
+		let models: Multipart['multipart'][number]['apply'];
 		if (Object.keys(blockstate)[0] == 'multipart') {
 			models = this.fromMultipart(blockstate as Multipart);
 		} else {
@@ -170,16 +172,21 @@ export class MinecraftBlockResolver {
 	fromMultipart(blockstate: Multipart) {
 		const propertyKeys = this.getPropertyKeys();
 		return blockstate.multipart.reduce((prev, { when, apply }) => {
-			if (when === undefined) return [...prev, apply];
+			if (when === undefined) return this._multipartGetModel(prev, apply);
 			if ('AND' in when) {
-				if (this.doesMatchAND(when['AND'], propertyKeys)) return [...prev, apply];
+				if (this.doesMatchAND(when['AND'], propertyKeys))
+					return this._multipartGetModel(prev, apply);
 			} else if ('OR' in when) {
-				if (this.doesMatchOR(when['OR'], propertyKeys)) return [...prev, apply];
+				if (this.doesMatchOR(when['OR'], propertyKeys)) return this._multipartGetModel(prev, apply);
 			} else {
-				if (this.doesMatch(when, propertyKeys)) return [...prev, apply];
+				if (this.doesMatch(when, propertyKeys)) return this._multipartGetModel(prev, apply);
 			}
 			return prev;
 		}, [] as Model[]);
+	}
+
+	_multipartGetModel(prev: Model[], model: Model | Model[]) {
+		return [...prev, Array.isArray(model) ? getRandomArrayItem(model) : model];
 	}
 
 	async getResolvedFacesTextures(textures: Required<BlockModel>['textures'], faces: Faces) {

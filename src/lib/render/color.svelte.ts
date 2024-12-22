@@ -1,4 +1,4 @@
-import type { NBTBlockStateProperties } from '../common_types';
+import type { NBTBlockStateProperties } from '$lib/types/common';
 import { getBiome } from './biome.svelte';
 
 const _colors = {

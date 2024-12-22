@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { T, useTask } from '@threlte/core';
+	import { T } from '@threlte/core';
 	import { Float32BufferAttribute, Vector3, BoxGeometry, Quaternion } from 'three';
 	import type { ResolvedFaceData } from '$lib/resolve/minecraft_block_resolver';
 	import Face from './Face.svelte';
 	import AnimatedFace from './AnimatedFace.svelte';
-	import type { Facing } from '../common_types';
+	import type { Facing } from '$lib/types/common';
 	import type { FacesDataArray } from '../render/minecraft_element';
 	import type { MinecraftBlock } from '../render/minecraft_block';
 
@@ -13,9 +13,6 @@
 	}
 
 	let { block }: Props = $props();
-	{
-		console.log(block.nameResolver.file);
-	}
 
 	if (block.uvlock) {
 		block!.uvManipulation.rotateTheFacesToInitialPositions();

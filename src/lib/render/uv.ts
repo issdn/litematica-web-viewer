@@ -1,5 +1,5 @@
 import type { Texture } from 'three';
-import type { Facing } from '../common_types';
+import type { Facing } from '$lib/types/common';
 import type { MinecraftBlock } from './minecraft_block';
 import type { ResolvedFaceData } from '../resolve/minecraft_block_resolver';
 import type { Optional } from '../types/common';
@@ -91,10 +91,13 @@ export function uvManipulation(block: MinecraftBlock) {
 		return faces.flatMap(({ rotation, uv, texture }) => {
 			let [u1, v1, u2, v2] = uv;
 
+			const h = texture?.asset.height;
+			const w = texture?.asset.width;
+
 			u1 /= 16;
-			v1 /= texture?.asset.height ?? 16;
+			v1 /= (16 * (h ?? 1)) / (w ?? 1);
 			u2 /= 16;
-			v2 /= texture?.asset.height ?? 16;
+			v2 /= (16 * (h ?? 1)) / (w ?? 1);
 
 			switch (rotation) {
 				case 90:

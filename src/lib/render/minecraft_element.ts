@@ -1,4 +1,4 @@
-import { Facing, type SimpleVector3D, type Element } from '$lib/common_types';
+import { Facing, type SimpleVector3D, type Element } from '$lib/types/common';
 import { Vector3D } from '$lib/parse/schematic_parser';
 import { Vector3 } from 'three';
 import { degToRad } from 'three/src/math/MathUtils.js';
@@ -47,7 +47,6 @@ export class MinecraftElement {
 		{ from, to, rotation, faces, shade }: ResolvedElements[number],
 		block: MinecraftBlock
 	) {
-		console.log(shade);
 		return new MinecraftElement(from, to, rotation, faces, block, shade);
 	}
 

@@ -1,4 +1,4 @@
-import { Facing, type BlockRotation, type NBTBlockStateProperties } from '$lib/common_types';
+import { Facing, type BlockRotation, type NBTBlockStateProperties } from '$lib/types/common';
 import { type NBTVector3D } from '$lib/parse/schematic_parser';
 import { degToRad } from 'three/src/math/MathUtils.js';
 import type { ResolvedBlockModel } from '../resolve/minecraft_block_resolver';

@@ -6,8 +6,8 @@ import {
 	type MCMeta,
 	type NBTBlockStateProperties,
 	type Variants
-} from '$lib/common_types';
-import { MinecraftBlockResolver } from '$lib/resolve/minecraft_block_resolver';
+} from '$lib/types/common';
+import { MinecraftBlockResolver, type BlockData } from '$lib/resolve/minecraft_block_resolver';
 import { BlockNameResolver } from '$lib/resolve/block_name_resolver';
 import * as fs from 'node:fs';
 
@@ -17,18 +17,21 @@ import type { MinecraftAssetsManager } from '$lib/textures/assets_manager';
 class MockMinecraftAssetsManager implements MinecraftAssetsManager {
 	static baseUrl = './static';
 
+	rootName: string = 'default';
+
 	async getBlockstate(resolver: BlockNameResolver): Promise<Blockstate> {
 		return JSON.parse(
 			fs.readFileSync(
-				MockMinecraftAssetsManager.baseUrl + resolver.getRelativeBlockstatePath(),
+				MockMinecraftAssetsManager.baseUrl + `/${this.rootName}/` + resolver.relativeBlockstatePath,
 				'utf-8'
 			)
 		) as Blockstate;
 	}
+
 	async getBlockModel(resolver: BlockNameResolver): Promise<BlockModel> {
 		return JSON.parse(
 			fs.readFileSync(
-				MockMinecraftAssetsManager.baseUrl + resolver.getRelativeBlockModelPath(),
+				MockMinecraftAssetsManager.baseUrl + `/${this.rootName}/` + resolver.relativeBlockModelPath,
 				'utf-8'
 			)
 		) as BlockModel;
@@ -44,7 +47,7 @@ class MockMinecraftAssetsManager implements MinecraftAssetsManager {
 		try {
 			return JSON.parse(
 				fs.readFileSync(
-					MockMinecraftAssetsManager.baseUrl + resolver.getRelativeMCMetaPath(),
+					MockMinecraftAssetsManager.baseUrl + `/${this.rootName}/` + resolver.relativeMCMetaPath,
 					'utf-8'
 				)
 			) as MCMeta;
@@ -139,7 +142,7 @@ describe('Resolve textures for spruce log', () => {
 			}
 		};
 
-		expect(actualBlockModels[0].blockModel).toMatchObject(expected);
+		expect((actualBlockModels[0] as BlockData).blockModel).toMatchObject(expected);
 	});
 });
 
@@ -222,7 +225,7 @@ describe('Resolve textures for a piston head', () => {
 			]
 		};
 
-		expect(actualBlockModels[0].blockModel).toMatchObject(expected);
+		expect((actualBlockModels[0] as BlockData).blockModel).toMatchObject(expected);
 	});
 });
 
@@ -258,7 +261,7 @@ describe('Resolve textures for a redstone block', () => {
 			]
 		};
 
-		expect(actualBlockModels[0].blockModel).toMatchObject(expected);
+		expect((actualBlockModels[0] as BlockData).blockModel).toMatchObject(expected);
 	});
 });
 
@@ -353,7 +356,7 @@ describe('Resolve textures for stonecutter', () => {
 			]
 		};
 
-		expect(actualBlockModels[0].blockModel).toMatchObject(expected);
+		expect((actualBlockModels[0] as BlockData).blockModel).toMatchObject(expected);
 	});
 });
 
@@ -410,6 +413,69 @@ describe('Resolve textures for redstone wire', () => {
 						up: { uv: [0, 0, 16, 16], texture: { asset: new Image(), animation: {} } },
 						down: { uv: [0, 16, 16, 0], texture: { asset: new Image(), animation: {} } }
 					}
+				}
+			]
+		};
+
+		expect((actualBlockModels[0] as BlockData).blockModel).toMatchObject(expected);
+	});
+});
+
+describe('Resolve textures for fire', () => {
+	beforeAll(() => {
+		overrideImage(16, 16);
+	});
+
+	const blockResolver = new MinecraftBlockResolver(
+		{
+			east: 'false',
+			north: 'false',
+			south: 'false',
+			up: 'false',
+			west: 'false',
+			age: 8
+		} as NBTBlockStateProperties,
+		new MockMinecraftAssetsManager(),
+		BlockNameResolver.parse('minecraft:fire')
+	);
+
+	it('Should resolve model tree (multipart)', async () => {
+		const actualBlockModels = await blockResolver.resolve();
+
+		const expected = {
+			textures: {
+				particle: 'minecraft:block/fire_0',
+				fire: 'minecraft:block/fire_0'
+			},
+			ambientocclusion: false,
+			elements: [
+				{
+					from: [0, 0, 8.8],
+					to: [16, 22.4, 8.8],
+					rotation: { origin: [8, 8, 8], axis: 'x', angle: -22.5, rescale: true },
+					shade: false,
+					faces: { south: { uv: [0, 0, 16, 16], texture: { asset: new Image(), animation: {} } } }
+				},
+				{
+					from: [0, 0, 7.2],
+					to: [16, 22.4, 7.2],
+					rotation: { origin: [8, 8, 8], axis: 'x', angle: 22.5, rescale: true },
+					shade: false,
+					faces: { north: { uv: [0, 0, 16, 16], texture: { asset: new Image(), animation: {} } } }
+				},
+				{
+					from: [8.8, 0, 0],
+					to: [8.8, 22.4, 16],
+					rotation: { origin: [8, 8, 8], axis: 'z', angle: -22.5, rescale: true },
+					shade: false,
+					faces: { west: { uv: [0, 0, 16, 16], texture: { asset: new Image(), animation: {} } } }
+				},
+				{
+					from: [7.2, 0, 0],
+					to: [7.2, 22.4, 16],
+					rotation: { origin: [8, 8, 8], axis: 'z', angle: 22.5, rescale: true },
+					shade: false,
+					faces: { east: { uv: [0, 0, 16, 16], texture: { asset: new Image(), animation: {} } } }
 				}
 			]
 		};

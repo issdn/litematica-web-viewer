@@ -76,6 +76,7 @@ type Element = {
 	to: SimpleVector3D;
 	rotation?: { origin: SimpleVector3D; axis: Axis; angle: number; rescale: boolean };
 	faces: Faces;
+	shade?: boolean;
 };
 
 enum Facing {
@@ -129,7 +130,7 @@ type MCMeta = {
 type Multipart = Record<
 	'multipart',
 	{
-		apply: Model;
+		apply: Model | Model[];
 		when:
 			| NBTBlockStateProperties
 			| { AND: NBTBlockStateProperties[] }
