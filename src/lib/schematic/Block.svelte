@@ -18,15 +18,13 @@
 
 	let { assetsManager } = useTexturepack();
 
-	const resolver = new MinecraftBlockResolver(
-		properties,
-		assetsManager,
-		BlockNameResolver.parse(name)
-	);
+	const nameResolver = BlockNameResolver.parse(name);
+
+	const resolver = new MinecraftBlockResolver(properties, assetsManager, nameResolver);
 
 	function getElementColor(tintindex: FaceData['tintindex']) {
 		if (tintindex < 0) return undefined;
-		return getColor(name)?.(properties);
+		return getColor(nameResolver.file!)?.(properties);
 	}
 </script>
 

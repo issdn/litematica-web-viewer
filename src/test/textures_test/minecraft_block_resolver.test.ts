@@ -101,18 +101,16 @@ describe('Resolve textures for spruce log', () => {
 	it('Should correctly parse variants blockstate', () => {
 		const models = blockResolver.fromVariants(SpruceLogBlockstate as Variants);
 
-		const expected = [
-			{
-				model: 'minecraft:block/spruce_log_horizontal',
-				x: 90,
-				y: 90
-			}
-		];
+		const expected = {
+			model: 'minecraft:block/spruce_log_horizontal',
+			x: 90,
+			y: 90
+		};
 
 		expect(models).toMatchObject(expected);
 	});
 
-	it('Should resolve piston head block model tree (variants)', async () => {
+	it('Should resolve variants', async () => {
 		const actualBlockModels = await blockResolver.resolve();
 
 		const expected = {
@@ -140,6 +138,106 @@ describe('Resolve textures for spruce log', () => {
 				south: 'minecraft:block/spruce_log',
 				west: 'minecraft:block/spruce_log'
 			}
+		};
+
+		expect((actualBlockModels[0] as BlockData).blockModel).toMatchObject(expected);
+	});
+});
+
+describe('Resolve textures for grass block', () => {
+	beforeAll(() => {
+		overrideImage();
+	});
+
+	const blockResolver = new MinecraftBlockResolver(
+		{
+			snowy: false
+		} as NBTBlockStateProperties,
+		new MockMinecraftAssetsManager(),
+		BlockNameResolver.parse('minecraft:grass_block')
+	);
+
+	it('Should resolve variants', async () => {
+		const actualBlockModels = await blockResolver.resolve();
+
+		const expected = {
+			parent: 'block/block',
+			textures: {
+				particle: 'block/dirt',
+				bottom: 'block/dirt',
+				top: 'block/grass_block_top',
+				side: 'block/grass_block_side',
+				overlay: 'block/grass_block_side_overlay'
+			},
+			elements: [
+				{
+					from: [0, 0, 0],
+					to: [16, 16, 16],
+					faces: {
+						down: {
+							uv: [0, 0, 16, 16],
+							texture: { asset: new Image(), animation: null },
+							cullface: 'down'
+						},
+						up: {
+							uv: [0, 0, 16, 16],
+							texture: { asset: new Image(), animation: null },
+							cullface: 'up',
+							tintindex: 0
+						},
+						north: {
+							uv: [0, 0, 16, 16],
+							texture: { asset: new Image(), animation: null },
+							cullface: 'north'
+						},
+						south: {
+							uv: [0, 0, 16, 16],
+							texture: { asset: new Image(), animation: null },
+							cullface: 'south'
+						},
+						west: {
+							uv: [0, 0, 16, 16],
+							texture: { asset: new Image(), animation: null },
+							cullface: 'west'
+						},
+						east: {
+							uv: [0, 0, 16, 16],
+							texture: { asset: new Image(), animation: null },
+							cullface: 'east'
+						}
+					}
+				},
+				{
+					from: [0, 0, 0],
+					to: [16, 16, 16],
+					faces: {
+						north: {
+							uv: [0, 0, 16, 16],
+							texture: { asset: new Image(), animation: null },
+							tintindex: 0,
+							cullface: 'north'
+						},
+						south: {
+							uv: [0, 0, 16, 16],
+							texture: { asset: new Image(), animation: null },
+							tintindex: 0,
+							cullface: 'south'
+						},
+						west: {
+							uv: [0, 0, 16, 16],
+							texture: { asset: new Image(), animation: null },
+							tintindex: 0,
+							cullface: 'west'
+						},
+						east: {
+							uv: [0, 0, 16, 16],
+							texture: { asset: new Image(), animation: null },
+							tintindex: 0,
+							cullface: 'east'
+						}
+					}
+				}
+			]
 		};
 
 		expect((actualBlockModels[0] as BlockData).blockModel).toMatchObject(expected);
@@ -444,8 +542,8 @@ describe('Resolve textures for fire', () => {
 
 		const expected = {
 			textures: {
-				particle: 'minecraft:block/fire_0',
-				fire: 'minecraft:block/fire_0'
+				particle: 'minecraft:block/fire_1',
+				fire: 'minecraft:block/fire_1'
 			},
 			ambientocclusion: false,
 			elements: [

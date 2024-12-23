@@ -22,7 +22,6 @@
 <input
 	webkitdirectory
 	multiple
-	onchange={(e) => console.log(e)}
 	class="absolute left-0 top-0 z-10"
 	type="file"
 	name="resourcepack"
@@ -34,7 +33,7 @@
 		createRenderer={(canvas) => {
 			return new WebGLRenderer({
 				canvas,
-				alpha: true,
+				alpha: false,
 				antialias: false
 			});
 		}}

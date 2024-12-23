@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { T } from '@threlte/core';
+	import { T, useThrelte } from '@threlte/core';
 	import { type NBTBlockState } from '$lib/types/common';
 	import { buildBlockStateArray, Vector3D, type Region } from '$lib/parse/schematic_parser';
 	import { OrbitControls } from '@threlte/extras';
@@ -13,6 +13,8 @@
 	}
 
 	let { regions }: Props = $props();
+
+	const { renderer } = useThrelte();
 
 	type Blocks = (NBTBlockState & {
 		position: Vector3D;
@@ -52,13 +54,11 @@
 		return result;
 	}
 
-	const maxAxis = Math.max(Math.max(max.x, max.y), max.z) * 16 * 2;
-
-	const ground = new Array(maxAxis ** 2)
+	const ground = new Array(16 ** 2)
 		.fill({ Name: 'minecraft:grass_block', Properties: { snowy: false } })
 		.map((block, i) => ({
 			...block,
-			position: new Vector3D(i % maxAxis, -1, Math.floor(i / maxAxis))
+			position: new Vector3D(i % 16, -1, Math.floor(i / 16))
 		}));
 
 	console.log(ground);
@@ -71,14 +71,14 @@
 		ref.lookAt(new Vector3(...middle.values));
 	}}
 >
-	<OrbitControls maxDistance={maxAxis} />
+	<OrbitControls onchange={() => console.log(renderer.info.render.calls)} />
 </T.PerspectiveCamera>
 
 <T.Scene />
 
 <T.AmbientLight />
 
-<T.DirectionalLight intensity={1} castShadow position={[4, 4, 12]} />
+<!-- <T.DirectionalLight intensity={1} castShadow position={[4, 4, 12]} /> -->
 
 <!-- <T.Mesh position.y={-8} rotation.x={-Math.PI / 2} receiveShadow>
 	<T.PlaneGeometry args={[50 * 16, 50 * 16]} />

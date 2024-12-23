@@ -14,7 +14,7 @@ export interface MinecraftAssetsManager {
 }
 
 export class ServerMinecraftAssetsManager implements MinecraftAssetsManager {
-	cache: Map<string, object | string> = new Map();
+	cache: Map<string, Promise<object | string>> = new Map();
 	rootName: string;
 
 	constructor(rootName: string) {
@@ -23,40 +23,49 @@ export class ServerMinecraftAssetsManager implements MinecraftAssetsManager {
 
 	async getBlockstate(resolver: BlockNameResolver): Promise<Blockstate> {
 		const url = `${this.rootName}/${resolver.relativeBlockstatePath}`;
-		if (this.cache.has(url)) return this.cache.get(url) as Blockstate;
-		const result = await (await fetch(url)).json();
+		if (this.cache.has(url)) return (await this.cache.get(url)) as Blockstate;
+		const result = this.fetch<Blockstate>(url);
 		this.cache.set(url, result);
-		return result;
+		return await result;
 	}
 
 	async getBlockModel(resolver: BlockNameResolver): Promise<BlockModel> {
 		const url = `${this.rootName}/${resolver.relativeBlockModelPath}`;
-		if (this.cache.has(url)) return this.cache.get(url) as BlockModel;
-		const result = (await (await fetch(url)).json()) as BlockModel;
+		if (this.cache.has(url)) return (await this.cache.get(url)) as BlockModel;
+		const result = this.fetch<BlockModel>(url);
 		this.cache.set(url, result);
-		return result;
+		return await result;
 	}
 
 	async getAssets(resolver: BlockNameResolver) {
 		const url = `${this.rootName}/${resolver.relativeTexturePath}`;
-		let img: HTMLImageElement;
+		let img: Promise<HTMLImageElement>;
 		if (this.cache.has(url)) {
-			img = this.cache.get(url) as HTMLImageElement;
+			img = this.cache.get(url) as Promise<HTMLImageElement>;
 		} else {
-			const blob = await (await fetch(url)).blob();
-			img = new Image();
-			img.src = URL.createObjectURL(blob);
-			await img.decode();
+			img = this.fetchTexture(url);
 			this.cache.set(url, img);
 		}
-		return img;
+		return await img;
 	}
 
 	async getMCMeta(resolver: BlockNameResolver) {
 		const url = `${this.rootName}/${resolver.relativeMCMetaPath}`;
-		if (this.cache.has(url)) return this.cache.get(url) as MCMeta;
-		const json = await (await fetch(url)).json();
-		this.cache.set(url, json);
-		return json as MCMeta;
+		if (this.cache.has(url)) return (await this.cache.get(url)) as MCMeta;
+		const result = this.fetch<MCMeta>(url);
+		this.cache.set(url, result);
+		return await result;
+	}
+
+	async fetchTexture(url: string) {
+		const blob = await (await fetch(url)).blob();
+		const img = new Image();
+		img.src = URL.createObjectURL(blob);
+		await img.decode();
+		return img;
+	}
+
+	async fetch<T>(url: string) {
+		return (await (await fetch(url)).json()) as T;
 	}
 }

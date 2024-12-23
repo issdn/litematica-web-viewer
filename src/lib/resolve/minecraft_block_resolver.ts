@@ -92,7 +92,6 @@ export class MinecraftBlockResolver {
 			model: model,
 			blockModel: blockModels[i]
 		}));
-
 		return this.blockData;
 	}
 
@@ -130,7 +129,7 @@ export class MinecraftBlockResolver {
 	fromVariants(blockstate: Variants): Model {
 		const variantValues = Object.entries(blockstate.variants).filter(([key]) =>
 			Object.entries(this.readVariantKey(key)).every(
-				([key, value]) => this.properties[key as keyof NBTBlockStateProperties] == value
+				([key, value]) => this.properties[key as keyof NBTBlockStateProperties]?.toString() == value
 			)
 		);
 		if (variantValues.length == 0) {
