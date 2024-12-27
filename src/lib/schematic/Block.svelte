@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { T } from '@threlte/core';
-	import type { NBTVector3D } from '../parse/schematic_parser';
+	import type { NBTVector3D, Vector3D } from '../parse/schematic_parser';
 	import { MinecraftBlockResolver } from '$root/src/lib/resolve/minecraft_block_resolver';
 	import Model from './Model.svelte';
 	import { BlockNameResolver, type NamespaceFile } from '../resolve/block_name_resolver';
@@ -12,9 +12,10 @@
 		position: NBTVector3D;
 		name: NamespaceFile;
 		properties: NBTBlockStateProperties;
+		instances: Vector3D[];
 	}
 
-	let { position, name, properties }: Props = $props();
+	let { position, name, properties, instances }: Props = $props();
 
 	let { assetsManager } = useTexturepack();
 
@@ -41,6 +42,7 @@
 			blockPosition={position}
 			{getElementColor}
 			{blockModel}
+			{instances}
 		/>
 	{/each}
 {:catch e}

@@ -15,8 +15,9 @@
 	import { MinecraftElement, type FacesDataArray } from '../render/minecraft_element';
 	import { uvManipulation } from '../render/uv';
 	import { degToRad } from 'three/src/math/MathUtils.js';
-	import type { NBTVector3D } from '../parse/schematic_parser';
+	import type { NBTVector3D, Vector3D } from '../parse/schematic_parser';
 	import type { Color } from '../render/color.svelte';
+	import { Instance, InstancedMesh } from '@threlte/extras';
 
 	interface Props {
 		blockRotation: Required<BlockRotation>;
@@ -24,9 +25,11 @@
 		uvlock: boolean;
 		blockModel: Required<ResolvedBlockModel>;
 		getElementColor: (tintindex: FaceData['tintindex']) => Color | undefined;
+		instances: Vector3D[];
 	}
 
-	let { blockRotation, uvlock, getElementColor, blockModel, blockPosition }: Props = $props();
+	let { blockRotation, uvlock, getElementColor, blockModel, blockPosition, instances }: Props =
+		$props();
 
 	const { rotateTheFacesToInitialPositions, rotateMap, translateUV } = uvManipulation();
 
@@ -44,48 +47,53 @@
 </script>
 
 {#each elements as element}
-	<T.Mesh
+	<InstancedMesh
 		receiveShadow={element.shade}
 		castShadow={element.shade}
 		oncreate={(ref) => {
-			ref.quaternion
-				.multiplyQuaternions(
-					new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), -radiansRotation.x),
-					ref.quaternion
-				)
-				.multiplyQuaternions(
-					new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), -radiansRotation.y),
-					ref.quaternion
-				);
-			let position = element.getPositionInsideBlock(radiansRotation, blockPosition);
-			ref.position.set(...position.values);
 			ref.geometry = new BoxGeometry(...element.size, 1, 1, 1)
 				.toNonIndexed()
 				.setAttribute('uv', new Float32BufferAttribute(translateUV(element.facesDataArray), 2));
-			if (element.rotation != null) {
-				if (element.rotation.axis == 'y') {
-					ref.quaternion.multiplyQuaternions(
-						new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), element.rotationAngle),
-						ref.quaternion
-					);
-					if (element.rotation.rescale == true) {
-						ref.scale.setX(element.scaling);
-						ref.scale.setZ(element.scaling);
-					}
-				}
-				if (element.rotation.axis == 'x') {
-					ref.quaternion.multiplyQuaternions(
-						new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), element.rotationAngle),
-						ref.quaternion
-					);
-					if (element.rotation.rescale == true) {
-						ref.scale.setX(element.scaling);
-						ref.scale.setY(element.scaling);
-					}
-				}
-			}
 		}}
 	>
+		{#each instances as vec}
+			<Instance
+				oncreate={(ref) => {
+					ref.quaternion
+						.multiplyQuaternions(
+							new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), -radiansRotation.x),
+							ref.quaternion
+						)
+						.multiplyQuaternions(
+							new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), -radiansRotation.y),
+							ref.quaternion
+						);
+					if (element.rotation != null) {
+						if (element.rotation.axis == 'y') {
+							ref.quaternion.multiplyQuaternions(
+								new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), element.rotationAngle),
+								ref.quaternion
+							);
+							if (element.rotation.rescale == true) {
+								ref.scale.setX(element.scaling);
+								ref.scale.setZ(element.scaling);
+							}
+						}
+						if (element.rotation.axis == 'x') {
+							ref.quaternion.multiplyQuaternions(
+								new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), element.rotationAngle),
+								ref.quaternion
+							);
+							if (element.rotation.rescale == true) {
+								ref.scale.setX(element.scaling);
+								ref.scale.setY(element.scaling);
+							}
+						}
+					}
+				}}
+				position={element.getPositionInsideBlock(radiansRotation, vec).values}
+			></Instance>
+		{/each}
 		{#each Object.values(element.facesDataArray) as face}
 			{#snippet getFace(texture?: Texture)}
 				<Face
@@ -110,5 +118,5 @@
 				{/if}
 			{/if}
 		{/each}
-	</T.Mesh>
+	</InstancedMesh>
 {/each}

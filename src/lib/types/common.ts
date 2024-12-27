@@ -51,6 +51,7 @@ type NBTBlockStateProperties = {
 	down?: StringBool;
 	power?: number;
 	age?: number;
+	snowy: StringBool | boolean;
 };
 
 type NBTBlockState = {
