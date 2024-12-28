@@ -4,9 +4,10 @@
 	import { MinecraftBlockResolver } from '$root/src/lib/resolve/minecraft_block_resolver';
 	import Model from './Model.svelte';
 	import { BlockNameResolver, type NamespaceFile } from '../resolve/block_name_resolver';
-	import type { FaceData, NBTBlockStateProperties } from '../types/common';
+	import type { NBTBlockStateProperties } from '../types/common';
 	import { useTexturepack } from '../resolve/texturepack.svelte';
-	import { getColor } from '../render/color.svelte';
+	import { setContext } from 'svelte';
+	import { degToRad } from 'three/src/math/MathUtils.js';
 
 	interface Props {
 		position: NBTVector3D;
@@ -22,11 +23,6 @@
 	const nameResolver = BlockNameResolver.parse(name);
 
 	const resolver = new MinecraftBlockResolver(properties, assetsManager, nameResolver);
-
-	function getElementColor(tintindex: FaceData['tintindex']) {
-		if (tintindex < 0) return undefined;
-		return getColor(nameResolver.file!)?.(properties);
-	}
 </script>
 
 {#await resolver.resolve()}
@@ -36,14 +32,16 @@
 	</T.Mesh>
 {:then blockDataArray}
 	{#each blockDataArray as { blockModel, model }}
-		<Model
-			blockRotation={{ x: model.x ?? 0, y: model.y ?? 0 }}
-			uvlock={model.uvlock ?? false}
-			blockPosition={position}
-			{getElementColor}
-			{blockModel}
-			{instances}
-		/>
+		{setContext('block', {
+			position,
+			name: nameResolver.file,
+			properties,
+			instances,
+			uvlock: model.uvlock ?? false,
+			rotation: { x: model.x ?? 0, y: model.y ?? 0 },
+			radiansRotation: { x: degToRad(model.x ?? 0), y: degToRad(model.y ?? 0) }
+		})}
+		<Model {blockModel} />
 	{/each}
 {:catch e}
 	{console.log(e)}

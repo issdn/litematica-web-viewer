@@ -13,7 +13,7 @@ class BlockNameResolver {
 
 	private _namespaceFile?: NamespaceFile;
 
-	file?: string | null;
+	file: string;
 
 	folder?: string | null;
 
@@ -24,7 +24,7 @@ class BlockNameResolver {
 		namespace,
 		folder
 	}: {
-		file?: string | null;
+		file: string;
 		namespace?: string | null;
 		folder?: string | null;
 	}) {
@@ -54,11 +54,15 @@ class BlockNameResolver {
 		// eslint-disable-next-line prefer-const
 		let [namespace, folder, file] =
 			(name.match(BlockNameResolver.regex) as (string | null)[]) ?? [];
-		if (file == null) {
+		if (file == null && folder == null) {
+			file = namespace;
+			namespace = null;
+		} else if (file == null) {
 			file = folder;
 			folder = null;
 		}
-		return new BlockNameResolver({ namespace, folder, file });
+		const fileMustBeNotNull = file as string;
+		return new BlockNameResolver({ namespace, folder, file: fileMustBeNotNull });
 	}
 
 	static splitBySlash = (namespaceFolderFile: string) => namespaceFolderFile.split('/');

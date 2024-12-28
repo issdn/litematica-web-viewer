@@ -3,8 +3,13 @@ import type {
 	NamespaceFile,
 	NamespaceFolderFile
 } from '$lib/resolve/block_name_resolver';
+import type { ResolvedFaceData } from '../resolve/minecraft_block_resolver';
 
 export type Optional<T, K extends keyof T> = Pick<Partial<T>, K> & Omit<T, K>;
+
+export type FacesDataArray = (Optional<Required<ResolvedFaceData>, 'texture'> & {
+	facing: Facing;
+})[];
 
 type FileLink = `#${string}`;
 

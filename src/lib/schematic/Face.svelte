@@ -11,30 +11,44 @@
 		NearestFilter,
 		RepeatWrapping
 	} from 'three';
-	import type { Facing } from '$lib/types/common';
+	import { Facing, type FaceData } from '$lib/types/common';
 	import type { ResolvedFaceData } from '../resolve/minecraft_block_resolver';
-	import type { MinecraftElement } from '../render/minecraft_element';
-	import type { Color } from '../render/color.svelte';
+	import { getColor } from '../render/color.svelte';
+	import { getContext } from 'svelte';
+	import type { BlockContext } from '../types/context';
 
 	interface Props {
-		element: MinecraftElement;
 		face: ResolvedFaceData & { facing: Facing };
 		side?: Side;
 		texture?: Texture | null;
-		materialColor: Color | undefined;
 		adjustTexture: (texture: Texture) => void;
 	}
 
-	let {
-		element,
-		face,
-		side = FrontSide,
-		texture = null,
-		materialColor,
-		adjustTexture
-	}: Props = $props();
+	let { face, side = FrontSide, texture = null, adjustTexture }: Props = $props();
 
-	const position = element.getFacePosition(face.facing);
+	const { name, properties } = getContext<BlockContext>('block');
+
+	function getElementColor(tintindex: FaceData['tintindex']) {
+		if (tintindex < 0) return undefined;
+		return getColor(name)?.(properties);
+	}
+
+	function getFacePosition(facing: Facing) {
+		switch (facing) {
+			case Facing.East:
+				return 0;
+			case Facing.West:
+				return 1;
+			case Facing.Up:
+				return 2;
+			case Facing.Down:
+				return 3;
+			case Facing.South:
+				return 4;
+			case Facing.North:
+				return 5;
+		}
+	}
 
 	texture = texture ?? new Texture(face.texture.asset);
 
@@ -45,11 +59,13 @@
 	texture.needsUpdate = true;
 
 	adjustTexture(texture);
+
+	const position = getFacePosition(face.facing);
 </script>
 
 <T.MeshStandardMaterial
 	{side}
-	color={materialColor}
+	color={getElementColor(face.tintindex)}
 	map={texture}
 	alphaTest={0.5}
 	attach={({ parent, ref }) => {

@@ -114,7 +114,6 @@
 </T.Mesh> -->
 
 {#snippet renderBlocks(blocks: BlockData[])}
-	{console.log(blocks)}
 	{#each blocks as { Name, Properties, position, instances }}
 		<Block {instances} name={Name} properties={Properties} {position} />
 	{/each}
