@@ -5,12 +5,10 @@
 	import { scene } from '$root/src/lib/compose/scene.svelte';
 	let { data } = $props();
 
-	const regions = Object.values(data);
-
 	let innerWidth = $state(0);
 	let innerHeight = $state(0);
 
-	scene.schematic = regions;
+	scene.regions = Object.values(data);
 </script>
 
 <svelte:window bind:innerWidth bind:innerHeight />

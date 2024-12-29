@@ -36,7 +36,13 @@
 
 <!-- {@render renderBlocks(ground)} -->
 
-{#await scene.scene}
+{#await scene.ground then blocks}
+	<T.Group>
+		{@render renderBlocks(blocks)}
+	</T.Group>
+{/await}
+
+{#await scene.schematic}
 	<h1>Loading</h1>
 {:then blocks}
 	<T.Group>

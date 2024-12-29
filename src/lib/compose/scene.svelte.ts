@@ -22,11 +22,23 @@ const groundTypes = {
 const serverAssetsManager = new ServerMinecraftAssetsManager('default');
 
 class Scene {
-	ground = $state(groundTypes.grassBlock);
-
-	schematic = $state<Region<NBTBlockState>[] | null>(null);
+	groundType = $state(groundTypes.grassBlock);
 
 	texturepack: FileList | null | undefined = $state();
+
+	regions = $state<Region<NBTBlockState>[] | null>(null);
+
+	private _ground = $derived.by(() => this.buildGround());
+
+	private _schematic = $derived.by(() => this.buildSchematic(this.regions));
+
+	get ground() {
+		return this._ground;
+	}
+
+	get schematic() {
+		return this._schematic;
+	}
 
 	private _assetsManager = $derived(
 		this.texturepack == null
@@ -34,51 +46,26 @@ class Scene {
 			: new ClientMinecraftAssetsManager(this.texturepack, serverAssetsManager)
 	);
 
-	private _scene = $derived.by(() => this.buildScene());
-
-	get scene() {
-		return this._scene;
-	}
-
 	get assetsManager() {
 		return this._assetsManager;
 	}
 
-	async buildScene() {
-		const { key, instances } = this.buildGround(this.ground);
-
-		const blockInstances = new Map<string, Vector3D[]>();
-
-		const uniqueBlocks: Omit<NBTBlockData, 'instances'>[] = [];
-
-		uniqueBlocks.push(this.ground);
-
-		blockInstances.set(key, instances);
-
-		return this.buildSchematic(blockInstances, uniqueBlocks, this.schematic);
-	}
-
-	private buildGround(
-		groundType: (typeof groundTypes)[keyof typeof groundTypes],
-		size: number = 32
-	) {
+	private async buildGround(size: number = 32) {
 		const instances: Vector3D[] = [];
 
 		for (let i = 0; i < size ** 2; i++) {
 			instances.push(new Vector3D((i % size) - size / 2, -1, Math.floor(i / size) - size / 2));
 		}
 
-		const key = this.getBlockUniqueKey(groundType);
-
-		return { key, instances };
+		return [{ ...this.groundType, instances }];
 	}
 
-	private buildSchematic(
-		blockInstances: Map<string, Vector3D[]>,
-		uniqueBlocks: Omit<NBTBlockData, 'instances'>[],
-		regions: Region<NBTBlockState>[] | null
-	) {
+	private async buildSchematic(regions: Region<NBTBlockState>[] | null) {
 		if (regions == null || regions.length == 0) return [] as NBTBlockData[];
+
+		const blockInstances = new Map<string, Vector3D[]>();
+
+		const uniqueBlocks: Omit<NBTBlockData, 'instances'>[] = [];
 
 		const max = regions
 			.map((r) => r.Position)
