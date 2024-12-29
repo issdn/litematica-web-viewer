@@ -2,7 +2,7 @@
 	import { Canvas } from '@threlte/core';
 	import Schematic from '../../lib/schematic/Schematic.svelte';
 	import { WebGLRenderer } from 'three';
-	import { useTexturepack } from '$root/src/lib/resolve/texturepack.svelte';
+	import { scene } from '$root/src/lib/compose/scene.svelte';
 	let { data } = $props();
 
 	const regions = Object.values(data);
@@ -10,16 +10,15 @@
 	let innerWidth = $state(0);
 	let innerHeight = $state(0);
 
-	const { setFiles } = useTexturepack();
-
-	let files: FileList | null | undefined = $state();
-
-	setFiles(files);
+	scene.schematic = regions;
 </script>
 
 <svelte:window bind:innerWidth bind:innerHeight />
 
 <input
+	onchange={({ target }) => {
+		scene.texturepack = (target as HTMLInputElement | null)?.files;
+	}}
 	webkitdirectory
 	multiple
 	class="absolute left-0 top-0 z-10"
@@ -38,7 +37,7 @@
 			});
 		}}
 	>
-		<Schematic {regions} />
+		<Schematic />
 	</Canvas>
 </div>
 

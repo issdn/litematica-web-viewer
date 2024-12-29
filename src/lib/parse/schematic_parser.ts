@@ -176,21 +176,21 @@ function buildBlockStateArray<T extends object>(
 		}
 	}
 
-	async function traverseAxis(value: number, fn: (point: number) => Promise<void>) {
+	function traverseAxis(value: number, fn: (point: number) => void) {
 		for (let point = 0; point < value; point++) {
-			await fn(point);
+			fn(point);
 		}
 	}
 
-	async function traverse(fn: (block: { position: Vector3D } & T) => Promise<void> | void) {
-		await traverseAxis(endVector.y, async (y) => {
-			await traverseAxis(endVector.z, async (z) => {
-				await traverseAxis(endVector.x, async (x) => {
+	function traverse(fn: (block: { position: Vector3D } & T) => void) {
+		traverseAxis(endVector.y, (y) => {
+			traverseAxis(endVector.z, (z) => {
+				traverseAxis(endVector.x, (x) => {
 					const index = y * endVector.x * endVector.z + z * endVector.x + x;
 					const state = getAt(index);
 					const block = blockPalette[Number(state)];
 					const blockPosition = posMinRelMinusReg.add({ x, y, z }).add(position);
-					await fn({
+					fn({
 						position: blockPosition,
 						...block
 					});

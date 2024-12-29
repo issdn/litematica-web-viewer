@@ -16,7 +16,7 @@
 
 	let { from, to, shade, faces, children }: Props = $props();
 
-	const { uvlock, radiansRotation } = getContext<BlockContext>('block');
+	const { uvlock, radiansRotation, instances } = getContext<BlockContext>('block');
 
 	const { translateUV, rotateMap } = uvManipulation();
 
@@ -87,6 +87,8 @@
 </script>
 
 <InstancedMesh
+	range={instances.length}
+	limit={instances.length}
 	receiveShadow={shade}
 	castShadow={shade}
 	oncreate={(ref) => {

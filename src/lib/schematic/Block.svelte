@@ -5,35 +5,30 @@
 	import Model from './Model.svelte';
 	import { BlockNameResolver, type NamespaceFile } from '../resolve/block_name_resolver';
 	import type { NBTBlockStateProperties } from '../types/common';
-	import { useTexturepack } from '../resolve/texturepack.svelte';
 	import { setContext } from 'svelte';
 	import { degToRad } from 'three/src/math/MathUtils.js';
+	import { scene } from '../compose/scene.svelte';
 
 	interface Props {
-		position: NBTVector3D;
 		name: NamespaceFile;
 		properties: NBTBlockStateProperties;
 		instances: Vector3D[];
 	}
 
-	let { position, name, properties, instances }: Props = $props();
-
-	let { assetsManager } = useTexturepack();
+	let { name, properties, instances }: Props = $props();
 
 	const nameResolver = BlockNameResolver.parse(name);
 
-	const resolver = new MinecraftBlockResolver(properties, assetsManager, nameResolver);
+	let resolver = $derived(
+		new MinecraftBlockResolver(properties, scene.assetsManager, nameResolver)
+	);
 </script>
 
 {#await resolver.resolve()}
-	<T.Mesh position.y={position.y * 16} position.x={position.x * 16} position.z={position.z * 16}>
-		<T.BoxGeometry args={[16, 16, 16]} />
-		<T.MeshBasicMaterial color="black" />
-	</T.Mesh>
+	{console.log(`Loading ${name}`)}
 {:then blockDataArray}
 	{#each blockDataArray as { blockModel, model }}
 		{setContext('block', {
-			position,
 			name: nameResolver.file,
 			properties,
 			instances,
