@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { Float32BufferAttribute, BoxGeometry } from 'three';
-	import { InstancedMesh } from '@threlte/extras';
+	import { Float32BufferAttribute, BoxGeometry, Vector3, Quaternion } from 'three';
+	import { Instance, InstancedMesh } from '@threlte/extras';
 	import { uvManipulation } from '../render/uv';
-	import { getContext, setContext, type Snippet } from 'svelte';
+	import { getContext, setContext, type Component, type Snippet } from 'svelte';
 	import {
 		Facing,
 		type BlockRotation,
@@ -15,14 +15,14 @@
 	import Face from './Face.svelte';
 	import AnimatedFace from './AnimatedFace.svelte';
 	import type { BlockContext } from '../types/context';
+	import { degToRad } from 'three/src/math/MathUtils.js';
 
 	type Props = {
-		children: Snippet;
 		uvlock: Model['uvlock'];
 		radiansRotation: Required<BlockRotation>;
 	} & ResolvedElements[number];
 
-	let { from, to, shade, faces, uvlock, radiansRotation, children }: Props = $props();
+	let { from, to, shade, faces, uvlock, radiansRotation, rotation }: Props = $props();
 
 	const { instances } = getContext<BlockContext>('block');
 
@@ -91,10 +91,68 @@
 		return face as ResolvedFaceData & { facing: Facing };
 	}
 
-	setContext('element', { size });
+	const rotationAngle = rotation == null ? 0 : degToRad(rotation.angle);
+
+	const scaling = 1 / Math.cos(rotationAngle);
+
+	const padding = new Vector3(16, 16, 16).sub(new Vector3(...size)).divide(new Vector3(2, 2, 2));
+
+	const fromRotated = new Vector3(...from);
+
+	if (radiansRotation.x != 0) {
+		padding.applyAxisAngle(new Vector3(1, 0, 0), -radiansRotation.x);
+		fromRotated.applyAxisAngle(new Vector3(1, 0, 0), -radiansRotation.x);
+	}
+
+	if (radiansRotation.y != 0) {
+		padding.applyAxisAngle(new Vector3(0, 1, 0), -radiansRotation.y);
+		fromRotated.applyAxisAngle(new Vector3(0, 1, 0), -radiansRotation.y);
+	}
+
+	let ref = $state() as InstancedMesh;
+
+	let { quaternion, scale } = $derived.by(() => {
+		const quaternion = ref.quaternion.clone();
+		const scale = ref.scale.clone();
+
+		quaternion
+			.multiplyQuaternions(
+				new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), -radiansRotation.x),
+				quaternion
+			)
+			.multiplyQuaternions(
+				new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), -radiansRotation.y),
+				quaternion
+			);
+		if (rotation != null) {
+			if (rotation.axis == 'x') {
+				quaternion.multiplyQuaternions(
+					new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), rotationAngle),
+					quaternion
+				);
+				if (rotation.rescale == true) {
+					scale.setX(scaling);
+					scale.setY(scaling);
+				}
+			}
+			if (rotation.axis == 'y') {
+				quaternion.multiplyQuaternions(
+					new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), rotationAngle),
+					quaternion
+				);
+				if (rotation.rescale == true) {
+					scale.setX(scaling);
+					scale.setZ(scaling);
+				}
+			}
+		}
+
+		return { quaternion, scale };
+	});
 </script>
 
 <InstancedMesh
+	bind:ref
 	range={instances.length}
 	limit={instances.length}
 	receiveShadow={shade}
@@ -105,7 +163,17 @@
 			.setAttribute('uv', new Float32BufferAttribute(translateUV(facesData), 2));
 	}}
 >
-	{@render children()}
+	{#each instances as position}
+		<Instance
+			quaternion={quaternion.toArray()}
+			scale={scale.toArray()}
+			position={[
+				position.x * 16 - padding.x + fromRotated.x,
+				position.y * 16 - padding.y + fromRotated.y,
+				position.z * 16 - padding.z + fromRotated.z
+			] as SimpleVector3D}
+		></Instance>
+	{/each}
 	{#each Object.values(facesData) as face}
 		{#snippet getFace(texture?: Texture)}
 			<Face
