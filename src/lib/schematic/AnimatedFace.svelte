@@ -6,7 +6,7 @@
 	import type { Snippet } from 'svelte';
 
 	interface Props {
-		getFace: Snippet<[texture: Texture]>;
+		getFace: Snippet<[transparent: boolean, texture: Texture]>;
 		asset: ResolvedFaceData['texture']['asset'];
 		animation: NonNullable<ResolvedFaceData['texture']['animation']>;
 	}
@@ -43,4 +43,4 @@
 	});
 </script>
 
-{@render getFace(texture)}
+{@render getFace(true, texture)}

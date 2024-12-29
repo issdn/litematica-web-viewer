@@ -50,7 +50,7 @@ class Scene {
 		return this._assetsManager;
 	}
 
-	private async buildGround(size: number = 32) {
+	private async buildGround(size: number = 16) {
 		const instances: Vector3D[] = [];
 
 		for (let i = 0; i < size ** 2; i++) {

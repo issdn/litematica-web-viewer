@@ -6,6 +6,7 @@
 	import type { NBTBlockStateProperties } from '../types/common';
 	import { setContext } from 'svelte';
 	import { scene } from '../compose/scene.svelte';
+	import Blocks from '$lib/blocks.json';
 
 	interface Props {
 		name: NamespaceFile;
@@ -24,7 +25,8 @@
 	setContext('block', {
 		name: nameResolver.file,
 		properties,
-		instances
+		instances,
+		transparent: Blocks[nameResolver.file as keyof typeof Blocks].transparent ?? true
 	});
 </script>
 

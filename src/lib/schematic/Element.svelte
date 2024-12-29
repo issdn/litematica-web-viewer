@@ -28,6 +28,8 @@
 
 	const { translateUV, rotateMap } = uvManipulation();
 
+	const { transparent } = getContext<BlockContext>('block');
+
 	const facesData = [
 		{
 			...faces[Facing.East],
@@ -155,7 +157,7 @@
 	bind:ref
 	range={instances.length}
 	limit={instances.length}
-	receiveShadow={shade}
+	receiveShadow={shade && !transparent}
 	castShadow={shade}
 	oncreate={(ref) => {
 		ref.geometry = new BoxGeometry(...size, 1, 1, 1)
@@ -175,8 +177,9 @@
 		></Instance>
 	{/each}
 	{#each Object.values(facesData) as face}
-		{#snippet getFace(texture?: Texture)}
+		{#snippet getFace(transparent: boolean, texture?: Texture)}
 			<Face
+				{transparent}
 				{texture}
 				face={getTypedFace(face)}
 				adjustTexture={(texture) => {
@@ -192,7 +195,7 @@
 			{#if face.texture.asset.height > face.texture.asset.width}
 				<AnimatedFace {getFace} asset={face.texture.asset} animation={face.texture.animation!} />
 			{:else}
-				{@render getFace()}
+				{@render getFace(transparent)}
 			{/if}
 		{/if}
 	{/each}

@@ -1,10 +1,14 @@
 <script lang="ts">
 	import { T, useThrelte } from '@threlte/core';
 	import type { SimpleVector3D } from '$lib/types/common';
-	import { OrbitControls } from '@threlte/extras';
-	import { Vector3 } from 'three';
+	import { OrbitControls, Sky } from '@threlte/extras';
+	import { Color, Vector3 } from 'three';
 	import Block from './Block.svelte';
 	import { scene, type NBTBlockData } from '../compose/scene.svelte';
+
+	const { scene: threeScene } = useThrelte();
+
+	threeScene.background = new Color('#E2EAF4');
 </script>
 
 <T.PerspectiveCamera
@@ -18,6 +22,8 @@
 </T.PerspectiveCamera>
 <!-- onchange={() => console.log(renderer.info.render.calls)}  -->
 <T.Scene />
+
+<!-- <Sky elevation={0.8} /> -->
 
 <T.AmbientLight />
 
@@ -36,15 +42,15 @@
 
 <!-- {@render renderBlocks(ground)} -->
 
-{#await scene.ground then blocks}
+{#await scene.schematic}
+	<h1>Loading</h1>
+{:then blocks}
 	<T.Group>
 		{@render renderBlocks(blocks)}
 	</T.Group>
 {/await}
 
-{#await scene.schematic}
-	<h1>Loading</h1>
-{:then blocks}
+{#await scene.ground then blocks}
 	<T.Group>
 		{@render renderBlocks(blocks)}
 	</T.Group>

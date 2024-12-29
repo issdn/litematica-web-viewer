@@ -22,9 +22,10 @@
 		side?: Side;
 		texture?: Texture | null;
 		adjustTexture: (texture: Texture) => void;
+		transparent: boolean;
 	}
 
-	let { face, side = FrontSide, texture = null, adjustTexture }: Props = $props();
+	let { face, side = FrontSide, texture = null, transparent, adjustTexture }: Props = $props();
 
 	const { name, properties } = getContext<BlockContext>('block');
 
@@ -67,7 +68,7 @@
 	{side}
 	color={getElementColor(face.tintindex)}
 	map={texture}
-	alphaTest={0.5}
+	alphaTest={face.tintindex >= 0 || transparent ? 0.5 : 0}
 	attach={({ parent, ref }) => {
 		let material = (parent as Mesh).material as unknown as (Material | null)[];
 		if (Array.isArray(material)) {
