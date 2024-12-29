@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { T } from '@threlte/core';
+	import { T, useThrelte } from '@threlte/core';
 	import type { SimpleVector3D } from '$lib/types/common';
 	import { OrbitControls } from '@threlte/extras';
 	import { Vector3 } from 'three';

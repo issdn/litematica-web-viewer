@@ -2,20 +2,19 @@
 	import { Instance } from '@threlte/extras';
 	import { getContext } from 'svelte';
 	import { Quaternion, Vector3 } from 'three';
-	import { type BlockContext, type ElementContext } from '../types/context';
+	import { type BlockContext, type ElementContext, type ModelContext } from '../types/context';
 	import { degToRad } from 'three/src/math/MathUtils.js';
-	import type { SimpleVector3D } from '../types/common';
+	import type { BlockRotation, SimpleVector3D } from '../types/common';
 	import { Vector3D } from '../parse/schematic_parser';
 	import type { ResolvedElements } from '../resolve/minecraft_block_resolver';
 
 	type Props = Pick<ResolvedElements[number], 'rotation'> &
 		Pick<ResolvedElements[number], 'from'> & {
 			position: Vector3D;
+			radiansRotation: Required<BlockRotation>;
 		};
 
-	const { rotation, from, position }: Props = $props();
-
-	const { radiansRotation } = getContext<BlockContext>('block');
+	const { rotation, from, position, radiansRotation }: Props = $props();
 
 	const { size } = getContext<ElementContext>('element');
 

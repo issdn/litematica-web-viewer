@@ -3,7 +3,13 @@
 	import { InstancedMesh } from '@threlte/extras';
 	import { uvManipulation } from '../render/uv';
 	import { getContext, setContext, type Snippet } from 'svelte';
-	import { Facing, type FacesDataArray, type SimpleVector3D } from '../types/common';
+	import {
+		Facing,
+		type BlockRotation,
+		type FacesDataArray,
+		type Model,
+		type SimpleVector3D
+	} from '../types/common';
 	import type { ResolvedElements, ResolvedFaceData } from '../resolve/minecraft_block_resolver';
 	import { Texture, Vector2 } from 'three';
 	import Face from './Face.svelte';
@@ -12,11 +18,13 @@
 
 	type Props = {
 		children: Snippet;
+		uvlock: Model['uvlock'];
+		radiansRotation: Required<BlockRotation>;
 	} & ResolvedElements[number];
 
-	let { from, to, shade, faces, children }: Props = $props();
+	let { from, to, shade, faces, uvlock, radiansRotation, children }: Props = $props();
 
-	const { uvlock, radiansRotation, instances } = getContext<BlockContext>('block');
+	const { instances } = getContext<BlockContext>('block');
 
 	const { translateUV, rotateMap } = uvManipulation();
 

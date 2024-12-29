@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Canvas } from '@threlte/core';
+	import { Canvas, useThrelte } from '@threlte/core';
 	import Schematic from '../../lib/schematic/Schematic.svelte';
 	import { WebGLRenderer } from 'three';
 	import { scene } from '$root/src/lib/compose/scene.svelte';
