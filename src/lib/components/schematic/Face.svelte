@@ -12,10 +12,10 @@
 		RepeatWrapping
 	} from 'three';
 	import { Facing, type FaceData } from '$lib/types/common';
-	import type { ResolvedFaceData } from '../resolve/minecraft_block_resolver';
-	import { getColor } from '../render/color.svelte';
+	import type { ResolvedFaceData } from '$lib/resolve/minecraft_block_resolver';
+	import { getColor } from '$lib/render/color.svelte';
 	import { getContext } from 'svelte';
-	import type { BlockContext } from '../types/context';
+	import type { BlockContext } from '$lib/types/context';
 
 	interface Props {
 		face: ResolvedFaceData & { facing: Facing };

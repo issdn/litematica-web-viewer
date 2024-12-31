@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { FrontSide, Texture, Vector2 } from 'three';
-	import Face from './Face.svelte';
-	import type { ResolvedFaceData } from '../resolve/minecraft_block_resolver';
+	import type { ResolvedFaceData } from '$lib/resolve/minecraft_block_resolver';
 	import { useTask } from '@threlte/core';
 	import type { Snippet } from 'svelte';
 

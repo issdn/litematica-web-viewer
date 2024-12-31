@@ -1,15 +1,21 @@
-import { buildBlockStateArray, Vector3D, type Region } from '../parse/schematic_parser';
+import { Vector3 } from 'three';
+import {
+	absoluteVector,
+	buildBlockStateArray,
+	getMaxCorners,
+	type Region
+} from '../parse/schematic_parser';
 import { BlockNameResolver, type NamespaceFile } from '../resolve/block_name_resolver';
 import { ServerMinecraftAssetsManager } from '../textures/assets_manager';
 import { ClientMinecraftAssetsManager } from '../textures/client_assets_manager';
 import type { NBTBlockState, NBTBlockStateProperties } from '../types/common';
 
 export type NBTBlockData = NBTBlockState & {
-	instances: Vector3D[];
+	instances: Vector3[];
 };
 
 export type BlockInstanceData = {
-	position: Vector3D;
+	position: Vector3;
 };
 
 const groundTypes = {
@@ -30,7 +36,7 @@ class Scene {
 
 	max = $state({ x: 0, y: 0, z: 0 });
 
-	middle = $state({ x: 0, y: 0, z: 0 });
+	middle: Vector3 = $state(new Vector3(0, 0, 0));
 
 	private _ground = $derived.by(() => this.buildGround());
 
@@ -55,10 +61,10 @@ class Scene {
 	}
 
 	private async buildGround(size: number = 16) {
-		const instances: Vector3D[] = [];
+		const instances: Vector3[] = [];
 
 		for (let i = 0; i < size ** 2; i++) {
-			instances.push(new Vector3D((i % size) - size / 2, -1, Math.floor(i / size) - size / 2));
+			instances.push(new Vector3((i % size) - size / 2, -1, Math.floor(i / size) - size / 2));
 		}
 
 		return [{ ...this.groundType, instances }];
@@ -67,19 +73,20 @@ class Scene {
 	private async buildSchematic(regions: Region<NBTBlockState>[] | null) {
 		if (regions == null || regions.length == 0) return [] as NBTBlockData[];
 
-		const blockInstances = new Map<string, Vector3D[]>();
+		const blockInstances = new Map<string, Vector3[]>();
 
 		const uniqueBlocks: Omit<NBTBlockData, 'instances'>[] = [];
 
 		this.max = regions
 			.map((r) => r.Size)
 			.reduce((prev, curr) => {
-				return Vector3D.fromNBTVector3D(prev).getMaxCorner(curr);
+				return getMaxCorners(curr, new Vector3(...Object.values(prev)));
 			});
 
-		this.middle = Vector3D.fromNBTVector3D(this.max).toAbsolute().divide({ x: 2, z: 2, y: 1 });
-
-		console.log(this.middle);
+		const newMiddle = absoluteVector(this.max).divide({ x: 2, z: 2, y: 1 });
+		const { x, y, z } = newMiddle;
+		newMiddle.set(Math.floor(x), Math.floor(y), Math.floor(z));
+		this.middle = newMiddle;
 
 		for (const region of regions) {
 			const { BlockStatePalette, BlockStates, Size, Position } = region;
@@ -93,14 +100,13 @@ class Scene {
 					nameResolver.file != 'lava' &&
 					nameResolver.file != 'air'
 				) {
-					const position = block.position.substract({ ...this.middle, y: 0 });
-					console.log(block.position, position);
+					block.position.sub({ ...this.middle, y: 0 });
 					const key = this.getBlockUniqueKey(block);
 					if (blockInstances.has(key)) {
 						const arr = blockInstances.get(key)!;
-						blockInstances.set(key, [...arr, position]);
+						blockInstances.set(key, [...arr, block.position]);
 					} else {
-						blockInstances.set(key, [position]);
+						blockInstances.set(key, [block.position]);
 						uniqueBlocks.push({
 							...block
 						});

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Canvas } from '@threlte/core';
-	import Schematic from '../../lib/schematic/Schematic.svelte';
+	import Schematic from '$lib/components/schematic/Schematic.svelte';
 	import { WebGLRenderer } from 'three';
 	import { scene } from '$root/src/lib/compose/scene.svelte';
 	import * as Tabs from '$lib/components/ui/tabs';

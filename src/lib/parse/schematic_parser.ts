@@ -1,4 +1,4 @@
-import type { SimpleVector3D } from '$lib/types/common';
+import { Vector3, type Vector3Like } from 'three';
 
 type BlockStates = number[][];
 type BlockStatePalette<T extends object> = T[];
@@ -13,93 +13,6 @@ type Regions<T extends object> = Record<string, Region<T>>;
 
 function numberArrayToSignedBigInt(arr: number[]) {
 	return BigInt.asIntN(64, BigInt(arr[0]) << 32n) | BigInt.asUintN(32, BigInt(arr[1]));
-}
-
-class Vector3D {
-	x: number;
-	y: number;
-	z: number;
-
-	values: SimpleVector3D;
-
-	constructor(x: number, y: number, z: number) {
-		this.x = x;
-		this.y = y;
-		this.z = z;
-		this.values = [x, y, z];
-	}
-
-	static fromNBTVector3D({ x, y, z }: NBTVector3D) {
-		return new Vector3D(x, y, z);
-	}
-
-	toNBTVector3D() {
-		return { x: this.x, y: this.y, z: this.z };
-	}
-
-	getRelativeEndPositionFromAreaSize() {
-		const x = this.x >= 0 ? this.x - 1 : this.x + 1;
-		const y = this.y >= 0 ? this.y - 1 : this.y + 1;
-		const z = this.z >= 0 ? this.z - 1 : this.z + 1;
-
-		return Vector3D.fromNBTVector3D({ x, y, z });
-	}
-
-	getMinCorners(other: NBTVector3D) {
-		return Vector3D.fromNBTVector3D({
-			x: Math.min(this.x, other.x),
-			y: Math.min(this.y, other.y),
-			z: Math.min(this.z, other.z)
-		});
-	}
-
-	getMaxCorner(other: NBTVector3D) {
-		return {
-			x: Math.max(this.x, other.x),
-			y: Math.max(this.y, other.y),
-			z: Math.max(this.z, other.z)
-		};
-	}
-
-	multiply(other: NBTVector3D) {
-		return Vector3D.fromNBTVector3D({
-			x: this.x * other.x,
-			y: this.y * other.y,
-			z: this.z * other.z
-		});
-	}
-
-	add(other: NBTVector3D) {
-		return Vector3D.fromNBTVector3D({
-			x: this.x + other.x,
-			y: this.y + other.y,
-			z: this.z + other.z
-		});
-	}
-
-	substract(other: NBTVector3D) {
-		return this.add({ x: -other.x, y: -other.y, z: -other.z });
-	}
-
-	divide(other: NBTVector3D) {
-		return Vector3D.fromNBTVector3D({
-			x: Math.floor(this.x / other.x),
-			y: Math.floor(this.y / other.y),
-			z: Math.floor(this.z / other.z)
-		});
-	}
-
-	toAbsolute() {
-		return Vector3D.fromNBTVector3D({
-			x: Math.abs(this.x),
-			y: Math.abs(this.y),
-			z: Math.abs(this.z)
-		});
-	}
-
-	toString() {
-		return `x: ${this.x} y: ${this.y} z: ${this.z}`;
-	}
 }
 
 function bigIntZeroFillRightShift(value: bigint, shiftBy: bigint) {
@@ -140,6 +53,34 @@ function numberOfLeadingZeros(x: number) {
 	return n;
 }
 
+function setRelativeEndPositionFromAreaSize(vector: Vector3) {
+	const x = vector.x >= 0 ? vector.x - 1 : vector.x + 1;
+	const y = vector.y >= 0 ? vector.y - 1 : vector.y + 1;
+	const z = vector.z >= 0 ? vector.z - 1 : vector.z + 1;
+
+	vector.set(x, y, z);
+}
+
+function getMinCorners(vector: NBTVector3D, other: NBTVector3D) {
+	return new Vector3(
+		Math.min(vector.x, other.x),
+		Math.min(vector.y, other.y),
+		Math.min(vector.z, other.z)
+	);
+}
+
+function getMaxCorners(vector: NBTVector3D, other: NBTVector3D) {
+	return new Vector3(
+		Math.max(vector.x, other.x),
+		Math.max(vector.y, other.y),
+		Math.max(vector.z, other.z)
+	);
+}
+
+function absoluteVector(vector: Vector3Like) {
+	return new Vector3(Math.abs(vector.x), Math.abs(vector.y), Math.abs(vector.z));
+}
+
 function buildBlockStateArray<T extends object>(
 	blockStates: BlockStates,
 	blockPalette: BlockStatePalette<T>,
@@ -149,13 +90,15 @@ function buildBlockStateArray<T extends object>(
 	const bitsPerEntry = Math.max(2, 32 - numberOfLeadingZeros(blockPalette.length - 1));
 	const maxEntryValue = BigInt((1 << bitsPerEntry) - 1);
 
-	const sizeVector = Vector3D.fromNBTVector3D(size);
-	const endVector = sizeVector.toAbsolute();
+	const sizeVector = new Vector3(...Object.values(size));
+	const endVector = absoluteVector(sizeVector);
 
-	const relativeEndPosition = sizeVector.getRelativeEndPositionFromAreaSize().add(position);
-	const minimumRelativeCorner = relativeEndPosition.getMinCorners(position);
+	setRelativeEndPositionFromAreaSize(sizeVector);
+	sizeVector.add(position);
 
-	const posMinRelMinusReg = minimumRelativeCorner.substract(position);
+	const minimumRelativeCorner = getMinCorners(sizeVector, position);
+
+	const posMinRelMinusReg = minimumRelativeCorner.sub(position);
 
 	function getAt(index: number) {
 		const startOffset = index * bitsPerEntry;
@@ -182,14 +125,14 @@ function buildBlockStateArray<T extends object>(
 		}
 	}
 
-	function traverse(fn: (block: { position: Vector3D } & T) => void) {
+	function traverse(fn: (block: { position: Vector3 } & T) => void) {
 		traverseAxis(endVector.y, (y) => {
 			traverseAxis(endVector.z, (z) => {
 				traverseAxis(endVector.x, (x) => {
 					const index = y * endVector.x * endVector.z + z * endVector.x + x;
 					const state = getAt(index);
 					const block = blockPalette[Number(state)];
-					const blockPosition = posMinRelMinusReg.add({ x, y, z }).add(position);
+					const blockPosition = posMinRelMinusReg.clone().add({ x, y, z }).add(position);
 					fn({
 						position: blockPosition,
 						...block
@@ -204,6 +147,6 @@ function buildBlockStateArray<T extends object>(
 	};
 }
 
-export { buildBlockStateArray, Vector3D };
+export { buildBlockStateArray, getMaxCorners, getMinCorners, absoluteVector };
 
 export type { BlockStates, NBTVector3D, Region, Regions };

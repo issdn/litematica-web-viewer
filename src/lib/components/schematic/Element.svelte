@@ -1,20 +1,20 @@
 <script lang="ts">
-	import { Float32BufferAttribute, BoxGeometry, Vector3, Quaternion } from 'three';
-	import { Instance, InstancedMesh } from '@threlte/extras';
-	import { uvManipulation } from '../render/uv';
-	import { getContext, setContext, type Component, type Snippet } from 'svelte';
 	import {
-		Facing,
-		type BlockRotation,
-		type FacesDataArray,
-		type Model,
-		type SimpleVector3D
-	} from '../types/common';
-	import type { ResolvedElements, ResolvedFaceData } from '../resolve/minecraft_block_resolver';
+		Float32BufferAttribute,
+		BoxGeometry,
+		Vector3,
+		Quaternion,
+		type Vector3Tuple
+	} from 'three';
+	import { Instance, InstancedMesh } from '@threlte/extras';
+	import { uvManipulation } from '$lib/render/uv';
+	import { getContext } from 'svelte';
+	import { Facing, type BlockRotation, type FacesDataArray, type Model } from '$lib/types/common';
+	import type { ResolvedElements, ResolvedFaceData } from '$lib/resolve/minecraft_block_resolver';
 	import { Texture, Vector2 } from 'three';
 	import Face from './Face.svelte';
 	import AnimatedFace from './AnimatedFace.svelte';
-	import type { BlockContext } from '../types/context';
+	import type { BlockContext } from '$lib/types/context';
 	import { degToRad } from 'three/src/math/MathUtils.js';
 
 	type Props = {
@@ -173,7 +173,7 @@
 				position.x * 16 - padding.x + fromRotated.x,
 				position.y * 16 - padding.y + fromRotated.y,
 				position.z * 16 - padding.z + fromRotated.z
-			] as SimpleVector3D}
+			] as Vector3Tuple}
 		></Instance>
 	{/each}
 	{#each Object.values(facesData) as face}

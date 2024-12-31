@@ -1,8 +1,8 @@
 <script lang="ts">
 	import type { ResolvedBlockModel } from '$lib/resolve/minecraft_block_resolver';
-	import { uvManipulation } from '../render/uv';
+	import { uvManipulation } from '$lib/render/uv';
 	import Element from './Element.svelte';
-	import type { Model } from '../types/common';
+	import type { Model } from '$lib/types/common';
 	import { degToRad } from 'three/src/math/MathUtils.js';
 
 	type Props = Required<ResolvedBlockModel> & Model;

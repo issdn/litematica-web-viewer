@@ -3,9 +3,8 @@
 	import { OrbitControls } from '@threlte/extras';
 	import { Color, OrthographicCamera, Vector3 } from 'three';
 	import Block from './Block.svelte';
-	import { scene, type NBTBlockData } from '../compose/scene.svelte';
-	import { CameraType } from '../types/schematic/schematic';
-	import type { SimpleVector3D } from '../types/common';
+	import { scene, type NBTBlockData } from '$lib/compose/scene.svelte';
+	import { CameraType } from '$lib/types/schematic/schematic';
 
 	const { camera }: { camera: CameraType } = $props();
 

@@ -3,6 +3,7 @@ import type {
 	NamespaceFile,
 	NamespaceFolderFile
 } from '$lib/resolve/block_name_resolver';
+import type { Vector3Tuple } from 'three';
 import type { ResolvedFaceData } from '../resolve/minecraft_block_resolver';
 
 export type Optional<T, K extends keyof T> = Pick<Partial<T>, K> & Omit<T, K>;
@@ -12,8 +13,6 @@ export type FacesDataArray = (Optional<Required<ResolvedFaceData>, 'texture'> & 
 })[];
 
 type FileLink = `#${string}`;
-
-type SimpleVector3D = [number, number, number];
 
 type BlockRotation = { x?: number; y?: number };
 
@@ -78,9 +77,9 @@ type Faces = {
 };
 
 type Element = {
-	from: SimpleVector3D;
-	to: SimpleVector3D;
-	rotation?: { origin: SimpleVector3D; axis: Axis; angle: number; rescale: boolean };
+	from: Vector3Tuple;
+	to: Vector3Tuple;
+	rotation?: { origin: Vector3Tuple; axis: Axis; angle: number; rescale: boolean };
 	faces: Faces;
 	shade?: boolean;
 };
@@ -173,7 +172,6 @@ export type {
 	NBTBlockStateProperties,
 	FaceData,
 	BlockRotation,
-	SimpleVector3D,
 	FileLink,
 	ResolvedTextures,
 	MCMeta
