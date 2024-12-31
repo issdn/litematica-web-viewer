@@ -160,7 +160,7 @@
 	receiveShadow={shade && !transparent}
 	castShadow={shade}
 	oncreate={(ref) => {
-		ref.geometry = new BoxGeometry(...size, 1, 1, 1)
+		ref.geometry = new BoxGeometry(...size)
 			.toNonIndexed()
 			.setAttribute('uv', new Float32BufferAttribute(translateUV(facesData), 2));
 	}}

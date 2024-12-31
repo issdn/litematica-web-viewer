@@ -54,11 +54,11 @@ class Vector3D {
 	}
 
 	getMaxCorner(other: NBTVector3D) {
-		return Vector3D.fromNBTVector3D({
+		return {
 			x: Math.max(this.x, other.x),
 			y: Math.max(this.y, other.y),
 			z: Math.max(this.z, other.z)
-		});
+		};
 	}
 
 	multiply(other: NBTVector3D) {

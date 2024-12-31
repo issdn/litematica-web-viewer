@@ -28,6 +28,10 @@ class Scene {
 
 	regions = $state<Region<NBTBlockState>[] | null>(null);
 
+	max = $state({ x: 0, y: 0, z: 0 });
+
+	middle = $state({ x: 0, y: 0, z: 0 });
+
 	private _ground = $derived.by(() => this.buildGround());
 
 	private _schematic = $derived.by(() => this.buildSchematic(this.regions));
@@ -67,13 +71,13 @@ class Scene {
 
 		const uniqueBlocks: Omit<NBTBlockData, 'instances'>[] = [];
 
-		const max = regions
-			.map((r) => r.Position)
+		this.max = regions
+			.map((r) => r.Size)
 			.reduce((prev, curr) => {
 				return Vector3D.fromNBTVector3D(prev).getMaxCorner(curr);
 			});
 
-		const middle = Vector3D.fromNBTVector3D(max).divide({ x: 2, z: 2, y: 1 });
+		this.middle = Vector3D.fromNBTVector3D(this.max).divide({ x: 2, z: 2, y: 1 });
 
 		for (const region of regions) {
 			const { BlockStatePalette, BlockStates, Size, Position } = region;
@@ -87,7 +91,7 @@ class Scene {
 					nameResolver.file != 'lava' &&
 					nameResolver.file != 'air'
 				) {
-					const position = block.position.substract({ ...middle, y: 0 });
+					const position = block.position.substract({ ...this.middle, y: 0 });
 					const key = this.getBlockUniqueKey(block);
 					if (blockInstances.has(key)) {
 						const arr = blockInstances.get(key)!;
