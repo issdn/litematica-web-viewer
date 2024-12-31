@@ -4,6 +4,10 @@
 	import { Color, OrthographicCamera, Vector3 } from 'three';
 	import Block from './Block.svelte';
 	import { scene, type NBTBlockData } from '../compose/scene.svelte';
+	import { CameraType } from '../types/schematic/schematic';
+	import type { SimpleVector3D } from '../types/common';
+
+	const { camera }: { camera: CameraType } = $props();
 
 	const { scene: threeScene, renderer } = useThrelte();
 
@@ -31,40 +35,43 @@
 		new Vector3(maxAxis, maxAxis, maxAxis).multiply({ x: 16, y: 16, z: 16 }).toArray()
 	);
 
-	let frustumSize = $derived(scene.max.y * 16 * 8);
+	let frustumSize = $derived(maxAxis * 16 * 2);
+
+	const lookAt = new Vector3(0, 0, 0);
 </script>
 
 <svelte:window bind:innerWidth bind:innerHeight />
 
-<!-- <T.PerspectiveCamera
-	makeDefault
-	position={new Array(3).fill(8 * 16) as SimpleVector3D}
-	oncreate={(ref) => {
-		ref.lookAt(new Vector3(2 * 16, 2 * 16, 2 * 16));
-	}}
->
-	<OrbitControls />
-</T.PerspectiveCamera> -->
-
-<T.OrthographicCamera
-	bind:ref={cam}
-	makeDefault
-	manual={true}
-	position={cameraPosition}
-	left={(-frustumSize * aspect) / 2}
-	right={(frustumSize * aspect) / 2}
-	top={frustumSize / 2}
-	bottom={-frustumSize / 2}
-	oncreate={(ref) => {
-		ref.lookAt(new Vector3(...Object.values(scene.max)));
-		ref.updateProjectionMatrix();
-		ref.updateMatrixWorld();
-	}}
->
-	<OrbitControls /></T.OrthographicCamera
->
-<!-- {console.log('ahha')} -->
-<T.Scene />
+{#if camera == CameraType.Orthographic}
+	<T.OrthographicCamera
+		bind:ref={cam}
+		makeDefault
+		manual={true}
+		position={cameraPosition}
+		left={(-frustumSize * aspect) / 2}
+		right={(frustumSize * aspect) / 2}
+		top={frustumSize / 2}
+		bottom={-frustumSize / 2}
+		oncreate={(ref) => {
+			ref.lookAt(lookAt);
+			ref.updateProjectionMatrix();
+			ref.updateMatrixWorld();
+		}}
+	>
+		<OrbitControls /></T.OrthographicCamera
+	>
+{:else}
+	<T.PerspectiveCamera
+		makeDefault
+		{aspect}
+		position={cameraPosition}
+		oncreate={(ref) => {
+			ref.lookAt(lookAt);
+		}}
+	>
+		<OrbitControls />
+	</T.PerspectiveCamera>
+{/if}
 
 <!-- <Sky elevation={0.8} /> -->
 

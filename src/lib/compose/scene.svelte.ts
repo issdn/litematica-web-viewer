@@ -77,7 +77,9 @@ class Scene {
 				return Vector3D.fromNBTVector3D(prev).getMaxCorner(curr);
 			});
 
-		this.middle = Vector3D.fromNBTVector3D(this.max).divide({ x: 2, z: 2, y: 1 });
+		this.middle = Vector3D.fromNBTVector3D(this.max).toAbsolute().divide({ x: 2, z: 2, y: 1 });
+
+		console.log(this.middle);
 
 		for (const region of regions) {
 			const { BlockStatePalette, BlockStates, Size, Position } = region;
@@ -92,6 +94,7 @@ class Scene {
 					nameResolver.file != 'air'
 				) {
 					const position = block.position.substract({ ...this.middle, y: 0 });
+					console.log(block.position, position);
 					const key = this.getBlockUniqueKey(block);
 					if (blockInstances.has(key)) {
 						const arr = blockInstances.get(key)!;
