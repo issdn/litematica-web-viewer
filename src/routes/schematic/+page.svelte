@@ -5,6 +5,7 @@
 	import { scene } from '$root/src/lib/compose/scene.svelte';
 	import * as Tabs from '$lib/components/ui/tabs';
 	import { CameraType } from '$root/src/lib/types/schematic/schematic';
+	import Dropzone from '$root/src/lib/components/ui/dropzone.svelte';
 	let { data } = $props();
 
 	let innerWidth = $state(0);
@@ -13,28 +14,20 @@
 	scene.regions = Object.values(data);
 
 	let camera: CameraType = $state(CameraType.Perspective);
+
+	$inspect(scene.assetsManager);
 </script>
 
 <svelte:window bind:innerWidth bind:innerHeight />
 
-<input
-	onchange={({ target }) => {
-		scene.texturepack = (target as HTMLInputElement | null)?.files;
-	}}
-	webkitdirectory
-	multiple
-	class="absolute left-0 top-0 z-10"
-	type="file"
-	name="resourcepack"
-	id="resourcepack"
-/>
+<Dropzone />
 
 <div style="width: {innerWidth}px; height: {innerHeight}px;">
 	<Canvas
 		createRenderer={(canvas) => {
 			return new WebGLRenderer({
 				canvas,
-				alpha: false,
+				alpha: true,
 				antialias: false
 			});
 		}}

@@ -8,13 +8,10 @@
 
 	const { camera }: { camera: CameraType } = $props();
 
-	const { scene: threeScene, renderer } = useThrelte();
+	const { renderer } = useThrelte();
 
 	let innerWidth = $state(0);
 	let innerHeight = $state(0);
-
-	threeScene.background = new Color('#E2EAF4');
-
 	let aspect = $derived(innerWidth / innerHeight);
 
 	let cam: OrthographicCamera | undefined = $state(undefined);

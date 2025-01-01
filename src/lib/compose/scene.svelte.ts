@@ -6,8 +6,10 @@ import {
 	type Region
 } from '../parse/schematic_parser';
 import { BlockNameResolver, type NamespaceFile } from '../resolve/block_name_resolver';
-import { ServerMinecraftAssetsManager } from '../textures/assets_manager';
-import { ClientMinecraftAssetsManager } from '../textures/client_assets_manager';
+import {
+	ServerMinecraftAssetsManager,
+	type MinecraftAssetsManager
+} from '../textures/assets_manager';
 import type { NBTBlockState, NBTBlockStateProperties } from '../types/common';
 
 export type NBTBlockData = NBTBlockState & {
@@ -25,12 +27,12 @@ const groundTypes = {
 	}
 } as Record<string, { Name: NamespaceFile; Properties: NBTBlockStateProperties }>;
 
-const serverAssetsManager = new ServerMinecraftAssetsManager('default');
+export const serverAssetsManager = new ServerMinecraftAssetsManager('default');
+
+// files.item(0)!.webkitRelativePath.split('/')[0]
 
 class Scene {
 	groundType = $state(groundTypes.grassBlock);
-
-	texturepack: FileList | null | undefined = $state();
 
 	regions = $state<Region<NBTBlockState>[] | null>(null);
 
@@ -50,14 +52,18 @@ class Scene {
 		return this._schematic;
 	}
 
-	private _assetsManager = $derived(
-		this.texturepack == null
-			? serverAssetsManager
-			: new ClientMinecraftAssetsManager(this.texturepack, serverAssetsManager)
-	);
+	private _assetsManager = $state<MinecraftAssetsManager>(serverAssetsManager);
 
-	get assetsManager() {
+	get assetsManager(): MinecraftAssetsManager {
 		return this._assetsManager;
+	}
+
+	set assetsManager(value: MinecraftAssetsManager | null) {
+		if (value == null) {
+			this._assetsManager = serverAssetsManager;
+		} else {
+			this._assetsManager = value;
+		}
 	}
 
 	private async buildGround(size: number = 16) {
