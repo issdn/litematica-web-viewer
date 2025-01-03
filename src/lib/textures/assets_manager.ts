@@ -1,17 +1,6 @@
 import type { BlockModel, Blockstate, MCMeta } from '$lib/types/common';
 import type { BlockNameResolver } from '../resolve/block_name_resolver';
-
-export interface MinecraftAssetsManager {
-	rootName: string;
-
-	getBlockstate(resolver: BlockNameResolver): Promise<Blockstate>;
-
-	getBlockModel(resolver: BlockNameResolver): Promise<BlockModel>;
-
-	getAssets(resolver: BlockNameResolver): Promise<HTMLImageElement>;
-
-	getMCMeta(resolver: BlockNameResolver): Promise<MCMeta>;
-}
+import type { MinecraftAssetsManager } from './minecraft_assets_manager.i';
 
 export class ServerMinecraftAssetsManager implements MinecraftAssetsManager {
 	cache: Map<string, Promise<object | string>> = new Map();

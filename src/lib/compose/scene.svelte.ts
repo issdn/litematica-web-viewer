@@ -6,11 +6,9 @@ import {
 	type Region
 } from '../parse/schematic_parser';
 import { BlockNameResolver, type NamespaceFile } from '../resolve/block_name_resolver';
-import {
-	ServerMinecraftAssetsManager,
-	type MinecraftAssetsManager
-} from '../textures/assets_manager';
+import { ServerMinecraftAssetsManager } from '../textures/assets_manager';
 import type { NBTBlockState, NBTBlockStateProperties } from '../types/common';
+import type { MinecraftAssetsManager } from '../textures/minecraft_assets_manager.i';
 
 export type NBTBlockData = NBTBlockState & {
 	instances: Vector3[];

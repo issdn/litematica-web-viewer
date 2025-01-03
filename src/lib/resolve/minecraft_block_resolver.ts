@@ -16,7 +16,7 @@ import {
 	type FolderFile,
 	type NamespaceFolderFile
 } from './block_name_resolver';
-import type { MinecraftAssetsManager } from '../textures/assets_manager';
+import type { MinecraftAssetsManager } from '$lib/textures/minecraft_assets_manager.i';
 
 export const enum FileType {
 	Blockstate,

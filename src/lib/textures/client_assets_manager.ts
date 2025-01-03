@@ -1,74 +1,82 @@
 import type { Blockstate, BlockModel, MCMeta } from '$lib/types/common';
 import type { BlockNameResolver } from '../resolve/block_name_resolver';
 import type { DropzoneFile } from '../types/components/dropzone';
-import type { MinecraftAssetsManager, ServerMinecraftAssetsManager } from './assets_manager';
+import type { ServerMinecraftAssetsManager } from './assets_manager';
+import type { FileService } from './file_service.i';
+import type { MinecraftAssetsManager } from './minecraft_assets_manager.i';
 
 class AssetError extends Error {}
 
 export class ClientMinecraftAssetsManager implements MinecraftAssetsManager {
-	files: Map<string, File>;
+	fileService: FileService;
 	reader: FileReader;
 	rootName: string;
 	serverAssetsManager: ServerMinecraftAssetsManager;
 
 	constructor(
-		files: Map<string, File>,
+		fileService: FileService,
 		serverAssetsManager: ServerMinecraftAssetsManager,
 		rootName: string
 	) {
 		this.reader = new FileReader();
-		this.files = files;
+		this.fileService = fileService;
 		this.rootName = rootName;
 		this.serverAssetsManager = serverAssetsManager;
 	}
 
 	async getBlockstate(resolver: BlockNameResolver): Promise<Blockstate> {
 		const url = this.getPathWithRoot(resolver.relativeBlockstatePath);
-		if (this.files.has(url)) {
-			return await this.parseFile(this.files.get(url)!);
+		const blob = await this.fileService.getFile(url);
+		if (blob == null) {
+			return await this.serverAssetsManager.getBlockstate(resolver);
 		}
-		return await this.serverAssetsManager.getBlockstate(resolver);
+		return await this.parseFile(blob, url);
 	}
 
 	async getBlockModel(resolver: BlockNameResolver): Promise<BlockModel> {
 		const url = this.getPathWithRoot(resolver.relativeBlockModelPath);
-		if (this.files.has(url)) {
-			return await this.parseFile(this.files.get(url)!);
+		const blob = await this.fileService.getFile(url);
+		if (blob == null) {
+			return await this.serverAssetsManager.getBlockModel(resolver);
 		}
-		return await this.serverAssetsManager.getBlockModel(resolver);
+		return await this.parseFile(blob, url);
 	}
 
 	async getAssets(resolver: BlockNameResolver): Promise<HTMLImageElement> {
 		const url = this.getPathWithRoot(resolver.relativeTexturePath);
-		if (this.files.has(url)) {
-			const fileImg = this.files.get(url)!;
-			const img = new Image();
-			img.src = URL.createObjectURL(fileImg);
-			await img.decode();
-			return img;
+		const blob = await this.fileService.getFile(url);
+		if (blob == null) {
+			return await this.serverAssetsManager.getAssets(resolver);
 		}
-		return await this.serverAssetsManager.getAssets(resolver);
+		const img = new Image();
+		img.src = URL.createObjectURL(blob);
+		await img.decode();
+		return img;
 	}
 
 	async getMCMeta(resolver: BlockNameResolver): Promise<MCMeta> {
 		const url = this.getPathWithRoot(resolver.relativeMCMetaPath);
-		if (this.files.has(url)) {
-			return await this.parseFile(this.files.get(url)!);
+		const blob = await this.fileService.getFile(url);
+		if (blob == null) {
+			return await this.serverAssetsManager.getMCMeta(resolver);
 		}
-		return await this.serverAssetsManager.getMCMeta(resolver);
+		return await this.parseFile(blob, url);
 	}
 
-	async parseFile<T>(file: File): Promise<T> {
+	async parseFile<T>(file: Blob, path: string): Promise<T> {
 		const result = await this.readFileAsync(file);
-		if (result == null) throw new AssetError(`Couldn't find file: "${file.name}"`);
+		if (result == null) throw new AssetError(`Couldn't find file with path: "${path}"`);
 		return JSON.parse(result as string);
 	}
 
 	getPathWithRoot(relative: string) {
+		if (this.rootName.length == 0) {
+			return relative;
+		}
 		return `${this.rootName}/${relative}`;
 	}
 
-	readFileAsync(file: File) {
+	readFileAsync(file: Blob) {
 		return new Promise<string | null>((resolve, reject) => {
 			const reader = new FileReader();
 

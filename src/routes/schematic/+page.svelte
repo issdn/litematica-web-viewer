@@ -37,7 +37,7 @@
 </div>
 
 <div class="absolute bottom-10 left-1/2 -translate-x-1/2">
-	<Tabs.Root bind:value={camera} class="w-[100px]">
+	<Tabs.Root bind:value={camera} class="w-[100px] -translate-x-1/2">
 		<Tabs.List>
 			<Tabs.Trigger value={CameraType.Perspective}>Perspective</Tabs.Trigger>
 			<Tabs.Trigger value={CameraType.Orthographic}>Orthographic</Tabs.Trigger>

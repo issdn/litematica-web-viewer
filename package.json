@@ -54,7 +54,6 @@
 		"better-sqlite3": "^11.7.0",
 		"drizzle-orm": "^0.38.2",
 		"jszip": "^3.10.1",
-		"minecraft-data": "^3.68.0",
 		"mode-watcher": "^0.5.0",
 		"prismarine-nbt": "^2.5.0",
 		"protodef": "^1.15.0",
