@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Canvas } from '@threlte/core';
 	import Schematic from '$lib/components/schematic/Schematic.svelte';
-	import { WebGLRenderer } from 'three';
+	import { Vector3, WebGLRenderer } from 'three';
 	import { scene } from '$root/src/lib/compose/scene.svelte';
 	import * as Tabs from '$lib/components/ui/tabs';
 	import { CameraType } from '$root/src/lib/types/schematic/schematic';
@@ -15,7 +15,18 @@
 
 	let camera: CameraType = $state(CameraType.Perspective);
 
-	$inspect(scene.assetsManager);
+	let maxAxis = $derived.by(() => {
+		const { x, y, z } = scene.max;
+		return Math.max(Math.max(x, y), z);
+	});
+
+	let cameraPosition = $derived(
+		new Vector3(maxAxis, maxAxis, maxAxis).multiply({ x: 16, y: 16, z: 16 })
+	);
+
+	let frustumSize = $derived(maxAxis * 16 * 2);
+
+	const target = new Vector3(0, 0, 0);
 </script>
 
 <svelte:window bind:innerWidth bind:innerHeight />
@@ -32,7 +43,7 @@
 			});
 		}}
 	>
-		<Schematic {camera} />
+		<Schematic {cameraPosition} {frustumSize} {target} {camera} />
 	</Canvas>
 </div>
 

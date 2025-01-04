@@ -23,6 +23,9 @@ importers:
       better-sqlite3:
         specifier: ^11.7.0
         version: 11.7.0
+      camera-controls:
+        specifier: ^2.9.0
+        version: 2.9.0(three@0.171.0)
       drizzle-orm:
         specifier: ^0.38.2
         version: 0.38.3(better-sqlite3@11.7.0)

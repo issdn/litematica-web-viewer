@@ -1,12 +1,19 @@
 <script lang="ts">
 	import { T, useThrelte } from '@threlte/core';
-	import { OrbitControls } from '@threlte/extras';
-	import { Color, OrthographicCamera, Vector3 } from 'three';
+	import { OrthographicCamera, Vector3, type Vector3Tuple } from 'three';
 	import Block from './Block.svelte';
 	import { scene, type NBTBlockData } from '$lib/compose/scene.svelte';
 	import { CameraType } from '$lib/types/schematic/schematic';
+	import CameraControls from '../../compose/CameraControls.svelte';
+	import CC from 'camera-controls';
 
-	const { camera }: { camera: CameraType } = $props();
+	const {
+		camera,
+		cameraPosition,
+		frustumSize,
+		target
+	}: { camera: CameraType; cameraPosition: Vector3; frustumSize: number; target: Vector3 } =
+		$props();
 
 	const { renderer } = useThrelte();
 
@@ -16,24 +23,16 @@
 
 	let cam: OrthographicCamera | undefined = $state(undefined);
 
+	let cameraState: {
+		cameraPosition: Vector3;
+		target: Vector3;
+	} | null = $state(null);
+
 	$effect(() => {
 		renderer.setSize(innerWidth, innerHeight);
 		cam?.updateProjectionMatrix();
 		cam?.updateMatrixWorld();
 	});
-
-	let maxAxis = $derived.by(() => {
-		const { x, y, z } = scene.max;
-		return Math.max(Math.max(x, y), z);
-	});
-
-	let cameraPosition = $derived(
-		new Vector3(maxAxis, maxAxis, maxAxis).multiply({ x: 16, y: 16, z: 16 }).toArray()
-	);
-
-	let frustumSize = $derived(maxAxis * 16 * 2);
-
-	const lookAt = new Vector3(0, 0, 0);
 </script>
 
 <svelte:window bind:innerWidth bind:innerHeight />
@@ -43,29 +42,44 @@
 		bind:ref={cam}
 		makeDefault
 		manual={true}
-		position={cameraPosition}
 		left={(-frustumSize * aspect) / 2}
 		right={(frustumSize * aspect) / 2}
 		top={frustumSize / 2}
 		bottom={-frustumSize / 2}
-		oncreate={(ref) => {
-			ref.lookAt(lookAt);
-			ref.updateProjectionMatrix();
-			ref.updateMatrixWorld();
-		}}
 	>
-		<OrbitControls /></T.OrthographicCamera
-	>
+		<CameraControls
+			oncreate={(ref) => {
+				ref.setLookAt(
+					...(cameraState?.cameraPosition.toArray() ?? cameraPosition.toArray()),
+					...(cameraState?.target.toArray() ?? target.toArray())
+				);
+			}}
+			oncontrolend={(e) => {
+				const target = (e as any).target as CC;
+				cameraState = {
+					cameraPosition: target.camera.position,
+					target: target.getTarget(new Vector3())
+				};
+			}}
+		/>
+	</T.OrthographicCamera>
 {:else}
-	<T.PerspectiveCamera
-		makeDefault
-		{aspect}
-		position={cameraPosition}
-		oncreate={(ref) => {
-			ref.lookAt(lookAt);
-		}}
-	>
-		<OrbitControls />
+	<T.PerspectiveCamera makeDefault>
+		<CameraControls
+			oncreate={(ref) => {
+				ref.setLookAt(
+					...(cameraState?.cameraPosition.toArray() ?? cameraPosition.toArray()),
+					...(cameraState?.target.toArray() ?? target.toArray())
+				);
+			}}
+			oncontrolend={(e) => {
+				const target = (e as any).target as CC;
+				cameraState = {
+					cameraPosition: target.camera.position,
+					target: target.getTarget(new Vector3())
+				};
+			}}
+		/>
 	</T.PerspectiveCamera>
 {/if}
 
