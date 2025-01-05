@@ -7,10 +7,11 @@
 	import { stringifyVector3, tryParseVector3 } from '$root/src/lib/parse/search_params.js';
 	import * as Tabs from '$lib/components/ui/tabs';
 	import Button from '$lib/components/ui/button/button.svelte';
-	import { Link } from 'lucide-svelte';
+	import { Link, Rotate3D } from 'lucide-svelte';
 	import * as Tooltip from '$lib/components/ui/tooltip/index.js';
 	import { CameraType, type Props as SchematicProps } from '$lib/types/schematic/schematic.js';
 	import { toast } from 'svelte-sonner';
+	import CC from 'camera-controls';
 
 	const {
 		blocks,
@@ -40,6 +41,8 @@
 	const searchParams = page.url.searchParams;
 	const givenCameraPosition = searchParams.get('cameraPosition');
 	const givenCameraTarget = searchParams.get('cameraTarget');
+
+	let cameraControls: CC | null = $state(null);
 
 	let camera: CameraType = $state(CameraType.Perspective);
 	let cameraState: SchematicProps['cameraState'] = $state(null);
@@ -71,7 +74,15 @@
 			});
 		}}
 	>
-		<Schematic bind:cameraState {blocks} {camera} {cameraPosition} {frustumSize} {target} />
+		<Schematic
+			bind:cameraState
+			bind:cameraControls
+			{blocks}
+			{camera}
+			{cameraPosition}
+			{frustumSize}
+			{target}
+		/>
 	</Canvas>
 </div>
 
@@ -83,6 +94,22 @@
 				<Tabs.Trigger value={CameraType.Orthographic}>Orthographic</Tabs.Trigger>
 			</Tabs.List>
 		</Tabs.Root>
+		<Tooltip.Provider>
+			<Tooltip.Root>
+				<Tooltip.Trigger>
+					<Button
+						size="icon"
+						variant="outline"
+						onclick={async () => {
+							cameraControls?.setLookAt(...cameraPosition.toArray(), ...target.toArray(), true);
+						}}><Rotate3D /></Button
+					>
+				</Tooltip.Trigger>
+				<Tooltip.Content>
+					<p>Reset camera to the initial state.</p>
+				</Tooltip.Content>
+			</Tooltip.Root>
+		</Tooltip.Provider>
 		<Tooltip.Provider>
 			<Tooltip.Root>
 				<Tooltip.Trigger>

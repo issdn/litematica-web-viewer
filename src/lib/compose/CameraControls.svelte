@@ -54,7 +54,7 @@
 
 	useTask(
 		(delta) => {
-			const updated = ref.update(delta);
+			const updated = ref.update(delta) ?? false;
 			if (updated) invalidate();
 		},
 		{

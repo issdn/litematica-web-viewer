@@ -13,7 +13,8 @@
 		target,
 		camera,
 		cameraState = $bindable(null),
-		blocks
+		blocks,
+		cameraControls = $bindable(null)
 	}: Props = $props();
 
 	const { renderer } = useThrelte();
@@ -33,6 +34,25 @@
 
 <svelte:window bind:innerWidth bind:innerHeight />
 
+{#snippet cc()}
+	<CameraControls
+		oncreate={(ref) => {
+			ref.setLookAt(
+				...(cameraState?.cameraPosition.toArray() ?? cameraPosition.toArray()),
+				...(cameraState?.target.toArray() ?? target.toArray())
+			);
+			cameraControls = ref;
+		}}
+		oncontrolend={(e) => {
+			const target = (e as any).target as CC;
+			cameraState = {
+				cameraPosition: target.camera.position,
+				target: target.getTarget(new Vector3())
+			};
+		}}
+	/>
+{/snippet}
+
 {#if camera == CameraType.Orthographic}
 	<T.OrthographicCamera
 		bind:ref={cam}
@@ -43,43 +63,15 @@
 		top={frustumSize / 2}
 		bottom={-frustumSize / 2}
 	>
-		<CameraControls
-			oncreate={(ref) => {
-				ref.setLookAt(
-					...(cameraState?.cameraPosition.toArray() ?? cameraPosition.toArray()),
-					...(cameraState?.target.toArray() ?? target.toArray())
-				);
-			}}
-			oncontrolend={(e) => {
-				const target = (e as any).target as CC;
-				cameraState = {
-					cameraPosition: target.camera.position,
-					target: target.getTarget(new Vector3())
-				};
-			}}
-		/>
+		{@render cc()}
 	</T.OrthographicCamera>
 {:else}
 	<T.PerspectiveCamera makeDefault>
-		<CameraControls
-			oncreate={(ref) => {
-				ref.setLookAt(
-					...(cameraState?.cameraPosition.toArray() ?? cameraPosition.toArray()),
-					...(cameraState?.target.toArray() ?? target.toArray())
-				);
-			}}
-			oncontrolend={(e) => {
-				const target = (e as any).target as CC;
-				cameraState = {
-					cameraPosition: target.camera.position,
-					target: target.getTarget(new Vector3())
-				};
-			}}
-		/>
+		{@render cc()}
 	</T.PerspectiveCamera>
 {/if}
 
-<Sky elevation={1} />
+<!-- <Sky elevation={1} /> -->
 
 <T.AmbientLight />
 

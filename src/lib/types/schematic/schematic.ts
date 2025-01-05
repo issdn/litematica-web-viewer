@@ -1,5 +1,6 @@
 import type { Vector3 } from 'three';
 import type { NBTBlockData } from '../../compose/scene.svelte';
+import CC from 'camera-controls';
 
 export const enum CameraType {
 	Orthographic = 'orthographic',
@@ -16,4 +17,5 @@ export type Props = {
 		target: Vector3;
 	} | null;
 	blocks: NBTBlockData[];
+	cameraControls: CC | null;
 };

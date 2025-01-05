@@ -21,7 +21,7 @@ export type BlockInstanceData = {
 const groundTypes = {
 	grassBlock: {
 		Name: 'minecraft:grass_block',
-		Properties: { snowy: false }
+		Properties: { snowy: 'false' }
 	}
 } as Record<string, { Name: NamespaceFile; Properties: NBTBlockStateProperties }>;
 
