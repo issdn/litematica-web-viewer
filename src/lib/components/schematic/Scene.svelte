@@ -101,6 +101,7 @@
 						size="icon"
 						variant="outline"
 						onclick={async () => {
+							cameraState = { cameraPosition, target };
 							cameraControls?.setLookAt(...cameraPosition.toArray(), ...target.toArray(), true);
 						}}><Rotate3D /></Button
 					>
