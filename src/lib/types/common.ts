@@ -26,8 +26,8 @@ enum BlockType {
 }
 
 enum Half {
-	bottom,
-	top
+	bottom = 'bottom',
+	top = 'top'
 }
 
 enum Axis {
@@ -36,7 +36,7 @@ enum Axis {
 	z = 'z'
 }
 
-type StringBool = 'false' | 'true';
+type StringBool = `${boolean}`;
 
 type NBTBlockStateProperties = {
 	facing?: Facing;
@@ -53,9 +53,9 @@ type NBTBlockStateProperties = {
 	west?: StringBool | Size | 'side';
 	up?: StringBool;
 	down?: StringBool;
-	power?: number;
-	age?: number;
-	snowy: StringBool | boolean;
+	power?: `${number}`;
+	age?: `${number}`;
+	snowy: StringBool;
 };
 
 type NBTBlockState = {

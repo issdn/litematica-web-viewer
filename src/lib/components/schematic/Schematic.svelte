@@ -2,26 +2,19 @@
 	import { T, useThrelte } from '@threlte/core';
 	import { OrthographicCamera, Vector3 } from 'three';
 	import Block from './Block.svelte';
-	import { scene, type NBTBlockData } from '$lib/compose/scene.svelte';
-	import { CameraType } from '$lib/types/schematic/schematic';
+	import { type NBTBlockData } from '$lib/compose/scene.svelte';
+	import { CameraType, type Props } from '$lib/types/schematic/schematic';
 	import CameraControls from '../../compose/CameraControls.svelte';
 	import CC from 'camera-controls';
+	import { Sky } from '@threlte/extras';
 	let {
 		cameraPosition,
 		frustumSize,
 		target,
 		camera,
-		cameraState = $bindable(null)
-	}: {
-		camera: CameraType;
-		cameraPosition: Vector3;
-		frustumSize: number;
-		target: Vector3;
-		cameraState: {
-			cameraPosition: Vector3;
-			target: Vector3;
-		} | null;
-	} = $props();
+		cameraState = $bindable(null),
+		blocks
+	}: Props = $props();
 
 	const { renderer } = useThrelte();
 
@@ -86,7 +79,7 @@
 	</T.PerspectiveCamera>
 {/if}
 
-<!-- <Sky elevation={0.8} /> -->
+<Sky elevation={1} />
 
 <T.AmbientLight />
 
@@ -105,13 +98,9 @@
 
 <!-- {@render renderBlocks(ground)} -->
 
-{#await scene.schematic}
-	<h1>Loading</h1>
-{:then blocks}
-	<T.Group>
-		{@render renderBlocks(blocks)}
-	</T.Group>
-{/await}
+<T.Group>
+	{@render renderBlocks(blocks)}
+</T.Group>
 
 <!-- {#await scene.ground then blocks}
 	<T.Group>

@@ -50,10 +50,11 @@ function getRandomArrayItem<T>(arr: T[]) {
 }
 
 export class ResolvingError extends Error {
-	detail: string;
+	detail?: string;
 
-	constructor(detail: string, message?: string, options?: ErrorOptions) {
+	constructor(message: string, detail?: string, options?: ErrorOptions) {
 		super(message, options);
+		this.name = 'ResolvingError';
 		this.detail = detail;
 	}
 }
@@ -133,7 +134,9 @@ export class MinecraftBlockResolver {
 			)
 		);
 		if (variantValues.length == 0) {
-			throw new ResolvingError('No matching model for properties specified in the schematic.');
+			throw new ResolvingError(
+				`${this.blockstateName.file}: No matching model for properties specified in the schematic.`
+			);
 		}
 		const result = variantValues[0][1];
 		return Array.isArray(result) ? getRandomArrayItem(result) : result;

@@ -83,7 +83,7 @@ class BlockNameResolver {
 
 	get namespaceFile() {
 		if (this._namespaceFile != null) return this._namespaceFile;
-		this._namespaceFile = `${this.namespace}:${this.file}`;
+		this._namespaceFile = `${this.namespace ?? 'minecraft'}:${this.file}`;
 		return this._namespaceFile;
 	}
 }
