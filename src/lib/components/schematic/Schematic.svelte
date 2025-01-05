@@ -1,19 +1,27 @@
 <script lang="ts">
 	import { T, useThrelte } from '@threlte/core';
-	import { OrthographicCamera, Vector3, type Vector3Tuple } from 'three';
+	import { OrthographicCamera, Vector3 } from 'three';
 	import Block from './Block.svelte';
 	import { scene, type NBTBlockData } from '$lib/compose/scene.svelte';
 	import { CameraType } from '$lib/types/schematic/schematic';
 	import CameraControls from '../../compose/CameraControls.svelte';
 	import CC from 'camera-controls';
-
-	const {
-		camera,
+	let {
 		cameraPosition,
 		frustumSize,
-		target
-	}: { camera: CameraType; cameraPosition: Vector3; frustumSize: number; target: Vector3 } =
-		$props();
+		target,
+		camera,
+		cameraState = $bindable(null)
+	}: {
+		camera: CameraType;
+		cameraPosition: Vector3;
+		frustumSize: number;
+		target: Vector3;
+		cameraState: {
+			cameraPosition: Vector3;
+			target: Vector3;
+		} | null;
+	} = $props();
 
 	const { renderer } = useThrelte();
 
@@ -22,11 +30,6 @@
 	let aspect = $derived(innerWidth / innerHeight);
 
 	let cam: OrthographicCamera | undefined = $state(undefined);
-
-	let cameraState: {
-		cameraPosition: Vector3;
-		target: Vector3;
-	} | null = $state(null);
 
 	$effect(() => {
 		renderer.setSize(innerWidth, innerHeight);
