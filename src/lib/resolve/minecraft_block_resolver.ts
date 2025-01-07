@@ -103,8 +103,7 @@ export class MinecraftBlockResolver {
 	}
 
 	async recursiveResolveBlockModelTree(leaf: BlockModel): Promise<BlockModel | ResolvedBlockModel> {
-		if (leaf?.parent == 'block/block' || leaf?.parent == undefined) {
-			if (leaf.elements == null) throw new ResolvingError('Elements property is missing');
+		if (leaf.elements != null) {
 			if (leaf.textures == null) {
 				throw new ResolvingError("Couldn't find any paths to the textures.");
 			}

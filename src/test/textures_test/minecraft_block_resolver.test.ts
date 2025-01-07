@@ -151,7 +151,7 @@ describe('Resolve textures for grass block', () => {
 
 	const blockResolver = new MinecraftBlockResolver(
 		{
-			snowy: false
+			snowy: 'false'
 		} as NBTBlockStateProperties,
 		new MockMinecraftAssetsManager(),
 		BlockNameResolver.parse('minecraft:grass_block')
@@ -467,7 +467,7 @@ describe('Resolve textures for redstone wire', () => {
 		{
 			east: 'side',
 			north: 'side',
-			power: 0,
+			power: '0',
 			south: 'side',
 			west: 'side'
 		} as NBTBlockStateProperties,
@@ -531,7 +531,7 @@ describe('Resolve textures for fire', () => {
 			south: 'false',
 			up: 'false',
 			west: 'false',
-			age: 8
+			age: '8'
 		} as NBTBlockStateProperties,
 		new MockMinecraftAssetsManager(),
 		BlockNameResolver.parse('minecraft:fire')
@@ -579,5 +579,47 @@ describe('Resolve textures for fire', () => {
 		};
 
 		expect(actualBlockModels[0].blockModel).toMatchObject(expected);
+	});
+});
+
+describe('Resolve textures for pressure plate', () => {
+	beforeAll(() => {
+		overrideImage(16, 16);
+	});
+
+	const blockResolver = new MinecraftBlockResolver(
+		{ powered: 'false' } as NBTBlockStateProperties,
+		new MockMinecraftAssetsManager(),
+		BlockNameResolver.parse('minecraft:oak_pressure_plate')
+	);
+
+	it('Should resolve model tree (variants)', async () => {
+		const actualBlockModels = await blockResolver.resolve();
+
+		const expected = {
+			parent: 'block/thin_block',
+			textures: {
+				particle: 'minecraft:block/oak_planks'
+			},
+			elements: [
+				{
+					from: [1, 0, 1],
+					to: [15, 1, 15],
+					faces: {
+						down: {
+							uv: [1, 1, 15, 15],
+							texture: { asset: new Image(), animation: {} },
+							cullface: 'down'
+						},
+						up: { uv: [1, 1, 15, 15], texture: { asset: new Image(), animation: {} } },
+						north: { uv: [1, 15, 15, 16], texture: { asset: new Image(), animation: {} } },
+						south: { uv: [1, 15, 15, 16], texture: { asset: new Image(), animation: {} } },
+						west: { uv: [1, 15, 15, 16], texture: { asset: new Image(), animation: {} } },
+						east: { uv: [1, 15, 15, 16], texture: { asset: new Image(), animation: {} } }
+					}
+				}
+			]
+		};
+		expect((actualBlockModels[0] as BlockData).blockModel).toMatchObject(expected);
 	});
 });
