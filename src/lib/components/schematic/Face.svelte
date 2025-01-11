@@ -21,11 +21,10 @@
 		face: ResolvedFaceData & { facing: Facing };
 		side?: Side;
 		texture?: Texture | null;
-		adjustTexture: (texture: Texture) => void;
 		transparent: boolean;
 	}
 
-	let { face, side = FrontSide, texture = null, transparent, adjustTexture }: Props = $props();
+	let { face, side = FrontSide, texture = null, transparent }: Props = $props();
 
 	const { name, properties } = getContext<BlockContext>('block');
 
@@ -58,8 +57,6 @@
 	texture.wrapS = RepeatWrapping;
 	texture.wrapT = RepeatWrapping;
 	texture.needsUpdate = true;
-
-	adjustTexture(texture);
 
 	const position = getFacePosition(face.facing);
 </script>

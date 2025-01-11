@@ -21,5 +21,5 @@
 </script>
 
 {#each elements as element}
-	<Element {radiansRotation} {uvlock} {...element} />
+	<Element {radiansRotation} {...element} />
 {/each}

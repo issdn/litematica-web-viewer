@@ -44,6 +44,7 @@
 			cameraControls = ref;
 		}}
 		oncontrolend={(e) => {
+			console.log(renderer.info.render);
 			const target = (e as any).target as CC;
 			cameraState = {
 				cameraPosition: target.camera.position,
@@ -75,7 +76,7 @@
 
 <T.AmbientLight />
 
-<!-- <T.DirectionalLight intensity={1} castShadow position={[4, 4, 12]} /> -->
+<T.DirectionalLight intensity={1} castShadow position={[4, 4, 12]} />
 
 <!-- <T.Mesh position.y={-8} rotation.x={-Math.PI / 2} receiveShadow>
 	<T.PlaneGeometry args={[50 * 16, 50 * 16]} />

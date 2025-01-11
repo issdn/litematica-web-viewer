@@ -1,7 +1,5 @@
-import type { Texture } from 'three';
 import { Facing } from '$lib/types/common';
-import type { ResolvedFaceData } from '../resolve/minecraft_block_resolver';
-import type { BlockRotation, Optional } from '../types/common';
+import type { BlockRotation, FacesDataArray } from '../types/common';
 
 export function uvManipulation() {
 	const xAxisFaces = [Facing.North, Facing.Up, Facing.South, Facing.Down];
@@ -52,45 +50,77 @@ export function uvManipulation() {
 		}
 	}
 
-	function rotateMap(facing: Facing, map: Texture, radiansRotation: Required<BlockRotation>) {
-		const hasXRotation = radiansRotation.x != 0;
-		const hasYRotation = radiansRotation.y != 0;
+	function rotateUVs(uvs: [number, number, number, number], angle: number) {
+		const [u1, v1, u2, v2] = uvs;
+
+		const centerU = 0.5;
+		const centerV = 0.5;
+
+		const translatedU1 = u1 - centerU;
+		const translatedV1 = v1 - centerV;
+		const translatedU2 = u2 - centerU;
+		const translatedV2 = v2 - centerV;
+
+		const cos = Math.cos(angle);
+		const sin = Math.sin(angle);
+
+		const rotatedU1 = translatedU1 * cos - translatedV1 * sin + centerU;
+		const rotatedV1 = translatedU1 * sin + translatedV1 * cos + centerV;
+		const rotatedU2 = translatedU2 * cos - translatedV2 * sin + centerU;
+		const rotatedV2 = translatedU2 * sin + translatedV2 * cos + centerV;
+
+		return [rotatedU1, rotatedV1, rotatedU2, rotatedV2];
+	}
+
+	function rotateSquare(uvs: number[], angle: number) {
+		return [
+			...rotateUVs([uvs[0], uvs[1], uvs[2], uvs[3]], angle),
+			...rotateUVs([uvs[4], uvs[5], uvs[6], uvs[7]], angle),
+			...rotateUVs([uvs[8], uvs[9], uvs[10], uvs[11]], angle)
+		];
+	}
+
+	function adjustUVs(uvs: number[], facing: Facing, { x, y }: Required<BlockRotation>) {
+		const hasXRotation = x != 0;
+		const hasYRotation = y != 0;
 		if (hasXRotation && hasYRotation) {
 			if (facing == yAxisFaces[3]) {
-				map.rotation = radiansRotation.y;
+				return rotateSquare(uvs, -y);
 			}
 			if (facing == xAxisFaces[2]) {
-				map.rotation = -radiansRotation.y;
+				return rotateSquare(uvs, y);
 			}
-
 			if (facing == yAxisFaces[0]) {
-				map.rotation = radiansRotation.x;
+				return rotateSquare(uvs, -x);
 			}
 			if (facing == yAxisFaces[2]) {
-				map.rotation = -radiansRotation.x;
+				return rotateSquare(uvs, x);
 			}
 		} else {
 			if (hasYRotation) {
 				if (facing == xAxisFaces[1]) {
-					map.rotation = radiansRotation.y;
+					return rotateSquare(uvs, -y);
 				}
 				if (facing == xAxisFaces[3]) {
-					map.rotation = -radiansRotation.y;
+					return rotateSquare(uvs, y);
 				}
 			}
 			if (hasXRotation) {
 				if (facing == yAxisFaces[0]) {
-					map.rotation = radiansRotation.x;
+					return rotateSquare(uvs, -x);
 				}
 				if (facing == yAxisFaces[2]) {
-					map.rotation = -radiansRotation.x;
+					return rotateSquare(uvs, x);
 				}
 			}
 		}
+		return uvs;
 	}
 
-	function translateUV(faces: Optional<Required<ResolvedFaceData>, 'texture'>[]) {
-		return faces.flatMap(({ rotation, uv, texture }) => {
+	function translateUV(faces: FacesDataArray, blockRotation: Required<BlockRotation>) {
+		return faces.flatMap(({ rotation, uv, texture, facing }) => {
+			rotation ??= 0;
+
 			let [u1, v1, u2, v2] = uv;
 
 			const h = texture?.asset.height;
@@ -107,28 +137,27 @@ export function uvManipulation() {
 					v2 = 1 - v2;
 					u1 = 1 - u1;
 					u2 = 1 - u2;
-					return [u2, v2, u1, v2, u2, v1, u1, v2, u1, v1, u2, v1];
+					return adjustUVs([u2, v2, u1, v2, u2, v1, u1, v2, u1, v1, u2, v1], facing, blockRotation);
 				case 180:
 					v1 = 1 - v1;
 					v2 = 1 - v2;
-					return [u2, v2, u2, v1, u1, v2, u2, v1, u1, v1, u1, v2];
+					return adjustUVs([u2, v2, u2, v1, u1, v2, u2, v1, u1, v1, u1, v2], facing, blockRotation);
 				case 270:
 					v1 = 1 - v1;
 					v2 = 1 - v2;
 					u1 = 1 - u1;
 					u2 = 1 - u2;
-					return [u1, v1, u2, v1, u1, v2, u2, v1, u2, v2, u1, v2];
+					return adjustUVs([u1, v1, u2, v1, u1, v2, u2, v1, u2, v2, u1, v2], facing, blockRotation);
 				default:
 					v1 = 1 - v1;
 					v2 = 1 - v2;
-					return [u1, v1, u1, v2, u2, v1, u1, v2, u2, v2, u2, v1];
+					return adjustUVs([u1, v1, u1, v2, u2, v1, u1, v2, u2, v2, u2, v1], facing, blockRotation);
 			}
 		});
 	}
 
 	return {
 		rotateTheFacesToInitialPositions,
-		rotateMap,
 		translateUV
 	};
 }

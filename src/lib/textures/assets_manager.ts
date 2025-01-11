@@ -3,7 +3,7 @@ import type { BlockNameResolver } from '../resolve/block_name_resolver';
 import type { MinecraftAssetsManager } from './minecraft_assets_manager.i';
 
 export class ServerMinecraftAssetsManager implements MinecraftAssetsManager {
-	cache: Map<string, Promise<object | string>> = new Map();
+	private cache: Map<string, Promise<object | string>> = new Map();
 	rootName: string;
 
 	constructor(rootName: string) {

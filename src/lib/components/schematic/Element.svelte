@@ -18,15 +18,14 @@
 	import { degToRad } from 'three/src/math/MathUtils.js';
 
 	type Props = {
-		uvlock: Model['uvlock'];
 		radiansRotation: Required<BlockRotation>;
 	} & ResolvedElements[number];
 
-	let { from, to, shade, faces, uvlock, radiansRotation, rotation }: Props = $props();
+	let { from, to, shade, faces, radiansRotation, rotation }: Props = $props();
 
 	const { instances } = getContext<BlockContext>('block');
 
-	const { translateUV, rotateMap } = uvManipulation();
+	const { translateUV } = uvManipulation();
 
 	const { transparent } = getContext<BlockContext>('block');
 
@@ -158,11 +157,11 @@
 	range={instances.length}
 	limit={instances.length}
 	receiveShadow={shade && !transparent}
-	castShadow={shade}
+	castShadow={false}
 	oncreate={(ref) => {
 		ref.geometry = new BoxGeometry(...size)
 			.toNonIndexed()
-			.setAttribute('uv', new Float32BufferAttribute(translateUV(facesData), 2));
+			.setAttribute('uv', new Float32BufferAttribute(translateUV(facesData, radiansRotation), 2));
 	}}
 >
 	{#each instances as position}
@@ -178,17 +177,7 @@
 	{/each}
 	{#each Object.values(facesData) as face}
 		{#snippet getFace(transparent: boolean, texture?: Texture)}
-			<Face
-				{transparent}
-				{texture}
-				face={getTypedFace(face)}
-				adjustTexture={(texture) => {
-					if (uvlock) {
-						texture.center = new Vector2(0.5, 0.5);
-						rotateMap(face.facing, texture, radiansRotation);
-					}
-				}}
-			/>
+			<Face {transparent} {texture} face={getTypedFace(face)} />
 		{/snippet}
 
 		{#if face.texture != undefined}
