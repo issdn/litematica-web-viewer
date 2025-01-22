@@ -1,22 +1,23 @@
 <script lang="ts">
-	import { FrontSide, Texture, Vector2 } from 'three';
+	import { Texture, Vector2 } from 'three';
 	import type { ResolvedFaceData } from '$lib/resolve/minecraft_block_resolver';
 	import { useTask } from '@threlte/core';
 	import type { Snippet } from 'svelte';
+	import { scene } from '../../compose/scene.svelte';
 
 	interface Props {
 		getFace: Snippet<[transparent: boolean, texture: Texture]>;
-		asset: ResolvedFaceData['texture']['asset'];
-		animation: NonNullable<ResolvedFaceData['texture']['animation']>;
+		texture: ResolvedFaceData['texture'];
+		animation: NonNullable<ResolvedFaceData['animation']>;
 	}
 
-	let { getFace, asset, animation }: Props = $props();
+	let { getFace, texture: textureName, animation }: Props = $props();
 
-	const texture: Texture = new Texture(asset);
+	const texture = scene.atlas.getAnimation(textureName)!;
 
 	const animationData = animation.animation;
 
-	const cols = asset.height / asset.width;
+	const cols = texture.image.height / texture.image.width;
 	const targetInterval = 0.05 * (animationData.frametime ?? 1);
 
 	function getPredefinedFrame(frame: number) {

@@ -1,16 +1,6 @@
 <script lang="ts">
 	import { T } from '@threlte/core';
-	import {
-		Material,
-		MeshStandardMaterial,
-		Vector2,
-		Texture,
-		Mesh,
-		type Side,
-		FrontSide,
-		NearestFilter,
-		RepeatWrapping
-	} from 'three';
+	import { Material, MeshStandardMaterial, Texture, Mesh, type Side, FrontSide } from 'three';
 	import { Facing, type FaceData } from '$lib/types/common';
 	import type { ResolvedFaceData } from '$lib/resolve/minecraft_block_resolver';
 	import { getColor } from '$lib/render/color.svelte';
@@ -20,11 +10,11 @@
 	interface Props {
 		face: ResolvedFaceData & { facing: Facing };
 		side?: Side;
-		texture?: Texture | null;
+		texture?: Texture;
 		transparent: boolean;
 	}
 
-	let { face, side = FrontSide, texture = null, transparent }: Props = $props();
+	let { face, side = FrontSide, texture, transparent }: Props = $props();
 
 	const { name, properties } = getContext<BlockContext>('block');
 
@@ -49,14 +39,6 @@
 				return 5;
 		}
 	}
-
-	texture = texture ?? new Texture(face.texture.asset);
-
-	texture.minFilter = NearestFilter;
-	texture.magFilter = NearestFilter;
-	texture.wrapS = RepeatWrapping;
-	texture.wrapT = RepeatWrapping;
-	texture.needsUpdate = true;
 
 	const position = getFacePosition(face.facing);
 </script>

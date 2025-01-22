@@ -7,7 +7,6 @@
 		type Vector3Tuple
 	} from 'three';
 	import { Instance, InstancedMesh } from '@threlte/extras';
-	import { uvManipulation } from '$lib/render/uv';
 	import { getContext } from 'svelte';
 	import { Facing, type BlockRotation, type FacesDataArray, type Model } from '$lib/types/common';
 	import type { ResolvedElements, ResolvedFaceData } from '$lib/resolve/minecraft_block_resolver';
@@ -16,6 +15,8 @@
 	import AnimatedFace from './AnimatedFace.svelte';
 	import type { BlockContext } from '$lib/types/context';
 	import { degToRad } from 'three/src/math/MathUtils.js';
+	import { adjustUVs, translateUV } from '../../render/uv';
+	import { scene } from '../../compose/scene.svelte';
 
 	type Props = {
 		radiansRotation: Required<BlockRotation>;
@@ -24,8 +25,6 @@
 	let { from, to, shade, faces, radiansRotation, rotation }: Props = $props();
 
 	const { instances } = getContext<BlockContext>('block');
-
-	const { translateUV } = uvManipulation();
 
 	const { transparent } = getContext<BlockContext>('block');
 
@@ -85,6 +84,31 @@
 					break;
 				}
 			}
+		}
+		if (item.texture != null) {
+			const [u1, v1, u2, v2] = item.uv;
+			if (item.animation == null) {
+				const { dx, dy, h, w } = scene.atlas.get(item.texture)!;
+				const scaleFactor = w / 16;
+				item.uv = [
+					u1 * scaleFactor + dx,
+					v1 * scaleFactor + dy,
+					u2 * scaleFactor + dx,
+					v2 * scaleFactor + dy
+				];
+				item.uv = adjustUVs(translateUV(item), item.facing, radiansRotation, w, {
+					dx,
+					dy
+				});
+				item.uv = item.uv.map((v) => v / scene.atlas.size);
+			} else {
+				const texture = scene.atlas.getAnimation(item.texture)!;
+				const aspect = 16 * (texture.image.height / texture.image.width);
+				item.uv = [u1 / 16, v1 / aspect, u2 / 16, v2 / aspect];
+				item.uv = adjustUVs(translateUV(item), item.facing, radiansRotation, 16, { dx: 0, dy: 0 });
+			}
+		} else {
+			item.uv = translateUV(item);
 		}
 	});
 
@@ -159,9 +183,13 @@
 	receiveShadow={shade && !transparent}
 	castShadow={false}
 	oncreate={(ref) => {
-		ref.geometry = new BoxGeometry(...size)
-			.toNonIndexed()
-			.setAttribute('uv', new Float32BufferAttribute(translateUV(facesData, radiansRotation), 2));
+		ref.geometry = new BoxGeometry(...size).toNonIndexed().setAttribute(
+			'uv',
+			new Float32BufferAttribute(
+				facesData.flatMap(({ uv }) => uv),
+				2
+			)
+		);
 	}}
 >
 	{#each instances as position}
@@ -181,10 +209,10 @@
 		{/snippet}
 
 		{#if face.texture != undefined}
-			{#if face.texture.asset.height > face.texture.asset.width}
-				<AnimatedFace {getFace} asset={face.texture.asset} animation={face.texture.animation!} />
+			{#if face.height > face.width}
+				<AnimatedFace {getFace} texture={face.texture} animation={face.animation!} />
 			{:else}
-				{@render getFace(transparent)}
+				{@render getFace(transparent, scene.atlas.texture)}
 			{/if}
 		{/if}
 	{/each}

@@ -9,6 +9,7 @@ import { BlockNameResolver, type NamespaceFile } from '../resolve/block_name_res
 import { ServerMinecraftAssetsManager } from '../textures/assets_manager';
 import type { NBTBlockState, NBTBlockStateProperties } from '../types/common';
 import type { MinecraftAssetsManager } from '../textures/minecraft_assets_manager.i';
+import { TextureAtlas } from '../textures/texture_atlas';
 
 export type NBTBlockData = NBTBlockState & {
 	instances: Vector3[];
@@ -38,9 +39,21 @@ class Scene {
 
 	middle: Vector3 = $state(new Vector3(0, 0, 0));
 
+	private _atlas: TextureAtlas | null = $state(null);
+
 	private _ground = $derived.by(() => this.buildGround());
 
 	private _schematic = $derived.by(() => this.buildSchematic(this.regions));
+
+	private _assetsManager = $state<MinecraftAssetsManager>(serverAssetsManager);
+
+	get atlas() {
+		return this._atlas!;
+	}
+
+	set atlas(value: TextureAtlas) {
+		this._atlas = value;
+	}
 
 	get ground() {
 		return this._ground;
@@ -49,8 +62,6 @@ class Scene {
 	get schematic() {
 		return this._schematic;
 	}
-
-	private _assetsManager = $state<MinecraftAssetsManager>(serverAssetsManager);
 
 	get assetsManager(): MinecraftAssetsManager {
 		return this._assetsManager;

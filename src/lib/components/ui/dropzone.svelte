@@ -5,6 +5,7 @@
 	import { ZipFileService } from '../../textures/zip_file_service';
 	import { StandardFileService } from '../../textures/standard_file_service';
 	import { FolderArchive } from 'lucide-svelte';
+	import { TextureAtlas } from '../../textures/texture_atlas';
 
 	class UploadException extends Error {}
 
@@ -24,6 +25,7 @@
 			});
 			const fileService = new ZipFileService(zipResult);
 			scene.assetsManager = new ClientMinecraftAssetsManager(fileService, serverAssetsManager, '');
+			scene.atlas = new TextureAtlas();
 		} else {
 			const result = (await readEntry(item)).flat();
 			const files = ClientMinecraftAssetsManager.resolveFilesFromDropzone(result);
@@ -34,6 +36,7 @@
 				serverAssetsManager,
 				rootName
 			);
+			scene.atlas = new TextureAtlas();
 		}
 
 		uploaded = true;

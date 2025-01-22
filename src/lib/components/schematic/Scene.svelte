@@ -2,7 +2,6 @@
 	import { Canvas } from '@threlte/core';
 	import Schematic from '$lib/components/schematic/Schematic.svelte';
 	import { Vector3, WebGLRenderer } from 'three';
-	import Dropzone from '$lib/components/ui/dropzone.svelte';
 	import { page } from '$app/state';
 	import { stringifyVector3, tryParseVector3 } from '$root/src/lib/parse/search_params.js';
 	import * as Tabs from '$lib/components/ui/tabs';
@@ -12,6 +11,9 @@
 	import { CameraType, type Props as SchematicProps } from '$lib/types/schematic/schematic.js';
 	import { toast } from 'svelte-sonner';
 	import CC from 'camera-controls';
+	import { scene } from '../../compose/scene.svelte';
+	import { TextureAtlas } from '../../textures/texture_atlas';
+	import Dropzone from '../ui/dropzone.svelte';
 
 	const {
 		blocks,
@@ -37,6 +39,8 @@
 		}
 		return url;
 	}
+
+	scene.atlas = new TextureAtlas();
 
 	const searchParams = page.url.searchParams;
 	const givenCameraPosition = searchParams.get('cameraPosition');

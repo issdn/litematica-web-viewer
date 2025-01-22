@@ -12,6 +12,7 @@ export class ClientMinecraftAssetsManager implements MinecraftAssetsManager {
 	reader: FileReader;
 	rootName: string;
 	serverAssetsManager: ServerMinecraftAssetsManager;
+	_cache = new Map<string, HTMLImageElement>();
 
 	constructor(
 		fileService: FileService,
@@ -44,6 +45,7 @@ export class ClientMinecraftAssetsManager implements MinecraftAssetsManager {
 
 	async getAssets(resolver: BlockNameResolver): Promise<HTMLImageElement> {
 		const url = this.getPathWithRoot(resolver.relativeTexturePath);
+		if (this._cache.has(url)) return this._cache.get(url)!;
 		const blob = await this.fileService.getFile(url);
 		if (blob == null) {
 			return await this.serverAssetsManager.getAssets(resolver);
@@ -51,6 +53,8 @@ export class ClientMinecraftAssetsManager implements MinecraftAssetsManager {
 		const img = new Image();
 		img.src = URL.createObjectURL(blob);
 		await img.decode();
+		URL.revokeObjectURL(img.src);
+		this._cache.set(url, img);
 		return img;
 	}
 

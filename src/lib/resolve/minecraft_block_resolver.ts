@@ -17,6 +17,7 @@ import {
 	type NamespaceFolderFile
 } from './block_name_resolver';
 import type { MinecraftAssetsManager } from '$lib/textures/minecraft_assets_manager.i';
+import type { TextureAtlas } from '../textures/texture_atlas';
 
 export const enum FileType {
 	Blockstate,
@@ -25,8 +26,10 @@ export const enum FileType {
 	MCMeta
 }
 
-export type ResolvedFaceData = Omit<FaceData, 'texture'> & {
-	texture: { animation: MCMeta | null; asset: HTMLImageElement };
+export type ResolvedFaceData = FaceData & {
+	animation: MCMeta | null;
+	width: number;
+	height: number;
 };
 
 export type ResolvedFaces = {
@@ -64,15 +67,18 @@ export class MinecraftBlockResolver {
 	minecraftAssetsManager: MinecraftAssetsManager;
 	blockstateName: BlockNameResolver;
 	blockData?: BlockData[];
+	textureAtlas: TextureAtlas;
 
 	constructor(
 		properties: NBTBlockStateProperties,
 		minecraftAssetsManager: MinecraftAssetsManager,
-		blockstateName: BlockNameResolver
+		blockstateName: BlockNameResolver,
+		textureAtlas: TextureAtlas
 	) {
 		this.properties = properties;
 		this.minecraftAssetsManager = minecraftAssetsManager;
 		this.blockstateName = blockstateName;
+		this.textureAtlas = textureAtlas;
 	}
 
 	async resolve() {
@@ -93,6 +99,7 @@ export class MinecraftBlockResolver {
 			model: model,
 			blockModel: blockModels[i]
 		}));
+
 		return this.blockData;
 	}
 
@@ -192,15 +199,24 @@ export class MinecraftBlockResolver {
 	async getResolvedFacesTextures(textures: Required<BlockModel>['textures'], faces: Faces) {
 		const result = {} as ResolvedFaces;
 		for await (const [key, value] of Object.entries(faces)) {
-			const texture = textures[this.linkNameToName(value['texture'])];
+			const texture = textures[this.linkNameToName(value['texture'])] as FolderFile | null;
 			if (texture == null) throw new ResolvingError('Texture link is missing.');
-			const resolver = BlockNameResolver.parse(texture as FolderFile);
-			const asset = await this.minecraftAssetsManager.getAssets(resolver);
+			const resolver = BlockNameResolver.parse(texture);
+			const img = await this.minecraftAssetsManager.getAssets(resolver);
 			let animation: MCMeta | null = null;
-			if (asset.height > asset.width) {
+			if (img.height > img.width) {
 				animation = await this.minecraftAssetsManager.getMCMeta(resolver);
+				this.textureAtlas.setAnimation(texture, img);
+			} else {
+				this.textureAtlas.set(texture, img);
 			}
-			result[key as Facing] = { ...value, texture: { asset, animation } };
+			result[key as Facing] = {
+				...value,
+				texture,
+				animation,
+				height: img.height,
+				width: img.width
+			};
 		}
 		return result;
 	}

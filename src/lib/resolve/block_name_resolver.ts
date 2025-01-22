@@ -51,7 +51,6 @@ class BlockNameResolver {
 
 	// minecraft:block/oak_button
 	static parse(name: string) {
-		// eslint-disable-next-line prefer-const
 		let [namespace, folder, file] =
 			(name.match(BlockNameResolver.regex) as (string | null)[]) ?? [];
 		if (file == null && folder == null) {

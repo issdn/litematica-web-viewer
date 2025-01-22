@@ -6,10 +6,16 @@ import type {
 import type { Vector3Tuple } from 'three';
 import type { ResolvedFaceData } from '../resolve/minecraft_block_resolver';
 
+export type UV = [number, number, number, number];
+
+export type Modification = { dx: number; dy: number; w: number; h: number };
+
 export type Optional<T, K extends keyof T> = Pick<Partial<T>, K> & Omit<T, K>;
 
 export type FacesDataArray = (Optional<Required<ResolvedFaceData>, 'texture'> & {
 	facing: Facing;
+	mod: Modification;
+	relativeUV: UV;
 })[];
 
 type FileLink = `#${string}`;
@@ -66,7 +72,7 @@ type NBTBlockState = {
 type BlockStatePalette = NBTBlockState[];
 
 type FaceData = {
-	uv?: [number, number, number, number];
+	uv?: [number, number, number, number] | number[];
 	texture: FolderFile;
 	rotation?: number;
 	tintindex: 0 | 1 | 2;
