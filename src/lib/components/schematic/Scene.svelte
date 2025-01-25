@@ -13,7 +13,7 @@
 	import CC from 'camera-controls';
 	import { scene } from '../../compose/scene.svelte';
 	import { TextureAtlas } from '../../textures/texture_atlas';
-	import Dropzone from '../ui/dropzone.svelte';
+	import Dropzone from '../ui/Dropzone.svelte';
 
 	const {
 		blocks,

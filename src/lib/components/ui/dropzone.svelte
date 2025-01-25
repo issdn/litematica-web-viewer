@@ -4,18 +4,17 @@
 	import * as jszip from 'jszip';
 	import { ZipFileService } from '../../textures/zip_file_service';
 	import { StandardFileService } from '../../textures/standard_file_service';
-	import { FolderArchive } from 'lucide-svelte';
+	import { FolderArchive, FolderUp } from 'lucide-svelte';
 	import { TextureAtlas } from '../../textures/texture_atlas';
 
 	class UploadException extends Error {}
 
 	let isDropping = $state(false);
+	let isUploading = $state(false);
+
 	let count = 0;
 
-	let uploaded = $state(true);
-
 	async function readFiles(items: DataTransferItemList | undefined) {
-		uploaded = false;
 		// TODO Multiple resourcepacks
 		if (items == null) throw new UploadException("Couldn't access any files.");
 		const item = items[0].webkitGetAsEntry();
@@ -38,8 +37,6 @@
 			);
 			scene.atlas = new TextureAtlas();
 		}
-
-		uploaded = true;
 	}
 
 	async function readEntry(entry: FileSystemEntry | null): Promise<{ file: File; path: string }[]> {
@@ -90,13 +87,18 @@
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
-	class={`absolute left-0 top-0 z-50 h-full w-full bg-popover p-8 text-xl text-popover-foreground opacity-80 ${isDropping ? '' : 'pointer-events-none invisible'}`}
+	class={`absolute left-0 top-0 z-50 h-full w-full bg-popover p-8 text-xl text-popover-foreground opacity-80 ${isDropping || isUploading ? '' : 'pointer-events-none invisible'}`}
 >
 	<div
 		class="border-border-input rounded-card border-border-input flex h-full w-full flex-col items-center justify-center border-2 border-dashed bg-transparent font-semibold text-muted-foreground"
 	>
-		<FolderArchive size={84} />
-		<span>Drop your texturepack here!</span>
+		{#if isUploading}
+			<FolderUp size={84} />
+			<span>Loading...</span>
+		{:else}
+			<FolderArchive size={84} />
+			<span>Drop your texturepack here!</span>
+		{/if}
 	</div>
 </div>
 
@@ -116,11 +118,13 @@
 	ondragover={(e) => {
 		e.preventDefault();
 	}}
-	ondrop={(e) => {
+	ondrop={async (e) => {
 		e.preventDefault();
-		readFiles(e.dataTransfer?.items);
 		isDropping = false;
+		isUploading = true;
 		count = 0;
+		await readFiles(e.dataTransfer?.items);
+		isUploading = false;
 	}}
 />
 

@@ -53,30 +53,28 @@
 					nameResolver
 				}))();
 			})
-		)
-			.then((result) => {
-				const data = result.reduce((prev, value) => {
-					if (value.status === 'rejected') {
-						if (value.reason instanceof Error) {
-							switch (value.reason.name) {
-								case 'ResolvingError':
-									toast.error(value.reason.message);
-									break;
-								default:
-									toast.error("Couldn't resolve the block from given properties.");
-									break;
-							}
+		).then((result) => {
+			const data = result.reduce((prev, value) => {
+				if (value.status === 'rejected') {
+					if (value.reason instanceof Error) {
+						switch (value.reason.name) {
+							case 'ResolvingError':
+								toast.error(value.reason.message);
+								break;
+							default:
+								toast.error("Couldn't resolve the block from given properties.");
+								break;
 						}
-						toast.error("A block couldn't be resolved.");
-						return prev;
-					} else {
-						return [...prev, value.value];
 					}
-				}, [] as ResolvedBlock[]);
-				scene.atlas.create();
-				return data;
-			})
-			.catch((e) => console.log(e));
+					toast.error("A block couldn't be resolved.");
+					return prev;
+				} else {
+					return [...prev, value.value];
+				}
+			}, [] as ResolvedBlock[]);
+			scene.atlas.create();
+			return data;
+		});
 	});
 </script>
 
