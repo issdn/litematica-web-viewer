@@ -1,9 +1,10 @@
 import type { BlockModel, Blockstate, MCMeta } from '$lib/types/common';
 import type { BlockNameResolver } from '../resolve/block_name_resolver';
+import { AssetCache } from './asset_cache';
 import type { MinecraftAssetsManager } from './minecraft_assets_manager.i';
 
 export class ServerMinecraftAssetsManager implements MinecraftAssetsManager {
-	private cache: Map<string, Promise<object | string>> = new Map();
+	private cache = new AssetCache();
 	rootName: string;
 
 	constructor(rootName: string) {
@@ -12,38 +13,22 @@ export class ServerMinecraftAssetsManager implements MinecraftAssetsManager {
 
 	async getBlockstate(resolver: BlockNameResolver): Promise<Blockstate> {
 		const url = `${this.rootName}/${resolver.relativeBlockstatePath}`;
-		if (this.cache.has(url)) return (await this.cache.get(url)) as Blockstate;
-		const result = this.fetch<Blockstate>(url);
-		this.cache.set(url, result);
-		return await result;
+		return await this.cache.get<Blockstate>(url, this.fetch);
 	}
 
 	async getBlockModel(resolver: BlockNameResolver): Promise<BlockModel> {
 		const url = `${this.rootName}/${resolver.relativeBlockModelPath}`;
-		if (this.cache.has(url)) return (await this.cache.get(url)) as BlockModel;
-		const result = this.fetch<BlockModel>(url);
-		this.cache.set(url, result);
-		return await result;
+		return await this.cache.get<BlockModel>(url, this.fetch);
 	}
 
 	async getAssets(resolver: BlockNameResolver) {
 		const url = `${this.rootName}/${resolver.relativeTexturePath}`;
-		let img: Promise<HTMLImageElement>;
-		if (this.cache.has(url)) {
-			img = this.cache.get(url) as Promise<HTMLImageElement>;
-		} else {
-			img = this.fetchTexture(url);
-			this.cache.set(url, img);
-		}
-		return await img;
+		return await this.cache.get<HTMLImageElement>(url, this.fetchTexture);
 	}
 
 	async getMCMeta(resolver: BlockNameResolver) {
 		const url = `${this.rootName}/${resolver.relativeMCMetaPath}`;
-		if (this.cache.has(url)) return (await this.cache.get(url)) as MCMeta;
-		const result = this.fetch<MCMeta>(url);
-		this.cache.set(url, result);
-		return await result;
+		return await this.cache.get<MCMeta>(url, this.fetch);
 	}
 
 	async fetchTexture(url: string) {

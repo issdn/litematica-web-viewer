@@ -67,7 +67,6 @@
 									break;
 							}
 						}
-						console.log(value.reason);
 						toast.error("A block couldn't be resolved.");
 						return prev;
 					} else {
