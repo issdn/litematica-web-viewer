@@ -47,12 +47,12 @@ export class TextureAtlas {
 			this.modification.set(key, mod);
 		});
 
-		canvas.convertToBlob().then(async (obj) => {
-			const debugImage = new Image();
-			debugImage.src = URL.createObjectURL(obj);
-			await debugImage.decode();
-			document.body.appendChild(debugImage);
-		});
+		// canvas.convertToBlob().then(async (obj) => {
+		// 	const debugImage = new Image();
+		// 	debugImage.src = URL.createObjectURL(obj);
+		// 	await debugImage.decode();
+		// 	document.body.appendChild(debugImage);
+		// });
 
 		this._texture = this.createTexture(canvas);
 	}

@@ -1,11 +1,10 @@
 <script lang="ts">
 	import { resolveAllBlocks, scene, serverAssetsManager } from '../../compose/scene.svelte';
 	import { ClientMinecraftAssetsManager } from '../../textures/client_assets_manager';
-	import * as jszip from 'jszip';
 	import { ZipFileService } from '../../textures/zip_file_service';
 	import { StandardFileService } from '../../textures/standard_file_service';
 	import { FolderArchive, FolderUp } from 'lucide-svelte';
-	import { TextureAtlas } from '../../textures/texture_atlas';
+	import { toast } from 'svelte-sonner';
 
 	class UploadException extends Error {}
 
@@ -18,7 +17,12 @@
 		// TODO Multiple resourcepacks
 		if (items == null) throw new UploadException("Couldn't access any files.");
 		const item = items[0].webkitGetAsEntry();
-		if (item?.name.endsWith('.zip')) {
+		if (item?.name.includes('.')) {
+			if (!item.name.endsWith('zip')) {
+				toast('Drag either a .zip file or a folder.');
+				return;
+			}
+			const jszip = await import('jszip');
 			const zipResult = await jszip.loadAsync(await readFileEntry(item as FileSystemFileEntry), {
 				createFolders: false
 			});

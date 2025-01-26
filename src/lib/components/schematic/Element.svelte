@@ -4,14 +4,13 @@
 		BoxGeometry,
 		Vector3,
 		Quaternion,
-		type Vector3Tuple,
-		DynamicDrawUsage
+		type Vector3Tuple
 	} from 'three';
 	import { Instance, InstancedMesh } from '@threlte/extras';
 	import { getContext } from 'svelte';
 	import { Facing, type BlockRotation, type FacesDataArray, type UV } from '$lib/types/common';
 	import type { ResolvedElements, ResolvedFaceData } from '$lib/resolve/minecraft_block_resolver';
-	import { Texture, Vector2 } from 'three';
+	import { Texture } from 'three';
 	import Face from './Face.svelte';
 	import AnimatedFace from './AnimatedFace.svelte';
 	import type { BlockContext } from '$lib/types/context';
