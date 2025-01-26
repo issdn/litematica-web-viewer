@@ -12,51 +12,6 @@ type UVData = {
 const xAxisFaces = [Facing.North, Facing.Up, Facing.South, Facing.Down];
 const yAxisFaces = [Facing.West, Facing.Down, Facing.East, Facing.Up];
 
-export function rotateTheFacesToInitialPositions(degreesRotation: Required<BlockRotation>) {
-	if (degreesRotation.x != 0 && degreesRotation.y != 0) {
-		if (degreesRotation.x != 0) {
-			const xSteps = degreesRotation.x / 90;
-			for (let i = 0; i < xSteps; i++) {
-				yAxisFaces[1] = xAxisFaces[2];
-				yAxisFaces[3] = xAxisFaces[0];
-				const elem = xAxisFaces.pop();
-				xAxisFaces.unshift(elem!);
-			}
-		}
-
-		if (degreesRotation.y != 0) {
-			const ySteps = degreesRotation.y / 90;
-			for (let i = 0; i < ySteps; i++) {
-				xAxisFaces[1] = yAxisFaces[3];
-				xAxisFaces[3] = yAxisFaces[1];
-				const elem = yAxisFaces.shift();
-				yAxisFaces.push(elem!);
-			}
-		}
-	} else if (degreesRotation.x != 0 || degreesRotation.y != 0) {
-		// if (degreesRotation.x != 0) {
-		// 	const xSteps = degreesRotation.x / 90;
-		// 	for (let i = 0; i < xSteps; i++) {
-		// 		const tempY = yAxisFaces;
-		// 		yAxisFaces[0] = xAxisFaces[0];
-		// 		yAxisFaces[1] = xAxisFaces[1];
-		// 		xAxisFaces[3] = tempY[0];
-		// 		xAxisFaces[0] = tempY[3];
-		// 	}
-		// }
-		if (degreesRotation.y != 0) {
-			const ySteps = degreesRotation.y / 90;
-			for (let i = 0; i < ySteps; i++) {
-				const tempY = [...yAxisFaces];
-				yAxisFaces[0] = xAxisFaces[0];
-				yAxisFaces[2] = xAxisFaces[2];
-				xAxisFaces[2] = tempY[0];
-				xAxisFaces[0] = tempY[2];
-			}
-		}
-	}
-}
-
 export function rotateUVs({ uvs, angle, dx, dy, size }: UVData) {
 	const [u1, v1, u2, v2] = uvs;
 
@@ -87,7 +42,7 @@ export function rotateSquare({ uvs, ...rest }: UVData) {
 	];
 }
 
-export function adjustUVs(
+export function resetFaceRotation(
 	uvs: number[],
 	facing: Facing,
 	{ x, y }: Required<BlockRotation>,
@@ -130,7 +85,7 @@ export function adjustUVs(
 	return uvs;
 }
 
-export function translateUV({ rotation, uv }: FacesDataArray[number]) {
+export function createUVFace({ rotation, uv }: FacesDataArray[number]) {
 	rotation ??= 0;
 
 	const [u1, v1, u2, v2] = uv;

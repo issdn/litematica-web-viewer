@@ -8,25 +8,24 @@
 	} from 'three';
 	import { Instance, InstancedMesh } from '@threlte/extras';
 	import { getContext } from 'svelte';
-	import { Facing, type BlockRotation, type FacesDataArray, type Model } from '$lib/types/common';
+	import { Facing, type BlockRotation, type FacesDataArray } from '$lib/types/common';
 	import type { ResolvedElements, ResolvedFaceData } from '$lib/resolve/minecraft_block_resolver';
 	import { Texture, Vector2 } from 'three';
 	import Face from './Face.svelte';
 	import AnimatedFace from './AnimatedFace.svelte';
 	import type { BlockContext } from '$lib/types/context';
 	import { degToRad } from 'three/src/math/MathUtils.js';
-	import { adjustUVs, translateUV } from '../../render/uv';
+	import { resetFaceRotation, createUVFace } from '../../render/uv';
 	import { scene } from '../../compose/scene.svelte';
 
 	type Props = {
 		radiansRotation: Required<BlockRotation>;
+		uvlock: boolean;
 	} & ResolvedElements[number];
 
-	let { from, to, shade, faces, radiansRotation, rotation }: Props = $props();
+	let { from, to, shade, faces, radiansRotation, rotation, uvlock }: Props = $props();
 
-	const { instances } = getContext<BlockContext>('block');
-
-	const { transparent } = getContext<BlockContext>('block');
+	const { instances, transparent } = getContext<BlockContext>('block');
 
 	const facesData = [
 		{
@@ -96,19 +95,25 @@
 					u2 * scaleFactor + dx,
 					v2 * scaleFactor + dy
 				];
-				item.uv = adjustUVs(translateUV(item), item.facing, radiansRotation, w, {
-					dx,
-					dy
-				});
+				item.uv = createUVFace(item);
+				if (uvlock) {
+					item.uv = resetFaceRotation(item.uv, item.facing, radiansRotation, w, {
+						dx,
+						dy
+					});
+				}
 				item.uv = item.uv.map((v) => v / scene.atlas.size);
 			} else {
 				const texture = scene.atlas.getAnimation(item.texture)!;
 				const aspect = 16 * (texture.image.height / texture.image.width);
 				item.uv = [u1 / 16, v1 / aspect, u2 / 16, v2 / aspect];
-				item.uv = adjustUVs(translateUV(item), item.facing, radiansRotation, 16, { dx: 0, dy: 0 });
+				item.uv = createUVFace(item);
+				if (uvlock) {
+					item.uv = resetFaceRotation(item.uv, item.facing, radiansRotation, 16, { dx: 0, dy: 0 });
+				}
 			}
 		} else {
-			item.uv = translateUV(item);
+			item.uv = createUVFace(item);
 		}
 	});
 
