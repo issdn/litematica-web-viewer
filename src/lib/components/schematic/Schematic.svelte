@@ -2,13 +2,10 @@
 	import { T, useThrelte } from '@threlte/core';
 	import { OrthographicCamera, Vector3 } from 'three';
 	import Block from './Block.svelte';
-	import { scene, type NBTBlockData } from '$lib/compose/scene.svelte';
+	import { resolveAllBlocks, scene, type NBTBlockData } from '$lib/compose/scene.svelte';
 	import { CameraType, type Props } from '$lib/types/schematic/schematic';
 	import CameraControls from '../../compose/CameraControls.svelte';
 	import CC from 'camera-controls';
-	import { BlockNameResolver } from '../../resolve/block_name_resolver';
-	import { MinecraftBlockResolver, type BlockData } from '../../resolve/minecraft_block_resolver';
-	import { toast } from 'svelte-sonner';
 
 	let {
 		cameraPosition,
@@ -19,8 +16,6 @@
 		blocks,
 		cameraControls = $bindable(null)
 	}: Props = $props();
-
-	type ResolvedBlock = NBTBlockData & { data: BlockData[]; nameResolver: BlockNameResolver };
 
 	const { renderer } = useThrelte();
 
@@ -36,46 +31,7 @@
 		cam?.updateMatrixWorld();
 	});
 
-	let blocksDataPromise = $derived.by(() => {
-		return Promise.allSettled(
-			blocks.map(({ Name, Properties, instances }: NBTBlockData) => {
-				const nameResolver = BlockNameResolver.parse(Name);
-				return (async () => ({
-					data: await new MinecraftBlockResolver(
-						Properties,
-						scene.assetsManager,
-						nameResolver,
-						scene.atlas
-					).resolve(),
-					Name,
-					Properties,
-					instances,
-					nameResolver
-				}))();
-			})
-		).then((result) => {
-			const data = result.reduce((prev, value) => {
-				if (value.status === 'rejected') {
-					if (value.reason instanceof Error) {
-						switch (value.reason.name) {
-							case 'ResolvingError':
-								toast.error(value.reason.message);
-								break;
-							default:
-								toast.error("Couldn't resolve the block from given properties.");
-								break;
-						}
-					}
-					toast.error("A block couldn't be resolved.");
-					return prev;
-				} else {
-					return [...prev, value.value];
-				}
-			}, [] as ResolvedBlock[]);
-			scene.atlas.create();
-			return data;
-		});
-	});
+	resolveAllBlocks(blocks, scene.assetsManager);
 </script>
 
 <svelte:window bind:innerWidth bind:innerHeight />
@@ -128,21 +84,15 @@
 	<T.MeshStandardMaterial color="white" />
 </T.Mesh> -->
 
-{#snippet renderBlocks(blocks: ResolvedBlock[])}
-	{#each blocks as block}
-		<Block {...block} />
-	{/each}
-{/snippet}
-
 <!-- {@render renderBlocks(ground)} -->
 
-{#await blocksDataPromise then blocksData}
-	{#if blocksData != null}
-		<T.Group>
-			{@render renderBlocks(blocksData)}
-		</T.Group>
-	{:else}{/if}
-{/await}
+{#if scene.blocks != null && scene.atlas != null}
+	<T.Group>
+		{#each scene.blocks as block}
+			<Block {...block} />
+		{/each}
+	</T.Group>
+{/if}
 
 <!-- {#await scene.ground then blocks}
 	<T.Group>

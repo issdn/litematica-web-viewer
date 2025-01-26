@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { scene, serverAssetsManager } from '../../compose/scene.svelte';
+	import { resolveAllBlocks, scene, serverAssetsManager } from '../../compose/scene.svelte';
 	import { ClientMinecraftAssetsManager } from '../../textures/client_assets_manager';
 	import * as jszip from 'jszip';
 	import { ZipFileService } from '../../textures/zip_file_service';
@@ -23,19 +23,19 @@
 				createFolders: false
 			});
 			const fileService = new ZipFileService(zipResult);
-			scene.assetsManager = new ClientMinecraftAssetsManager(fileService, serverAssetsManager, '');
-			scene.atlas = new TextureAtlas();
+			const assetsManager = new ClientMinecraftAssetsManager(fileService, serverAssetsManager, '');
+			await resolveAllBlocks(await scene.schematic, assetsManager);
 		} else {
 			const result = (await readEntry(item)).flat();
 			const files = ClientMinecraftAssetsManager.resolveFilesFromDropzone(result);
 			const fileService = new StandardFileService(files);
 			const rootName = result[0].path.split('/')[0];
-			scene.assetsManager = new ClientMinecraftAssetsManager(
+			const assetsManager = new ClientMinecraftAssetsManager(
 				fileService,
 				serverAssetsManager,
 				rootName
 			);
-			scene.atlas = new TextureAtlas();
+			await resolveAllBlocks(await scene.schematic, assetsManager);
 		}
 	}
 

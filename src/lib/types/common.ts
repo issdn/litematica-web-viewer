@@ -1,10 +1,14 @@
 import type {
+	BlockNameResolver,
 	FolderFile,
 	NamespaceFile,
 	NamespaceFolderFile
 } from '$lib/resolve/block_name_resolver';
 import type { Vector3Tuple } from 'three';
-import type { ResolvedFaceData } from '../resolve/minecraft_block_resolver';
+import type { BlockData, ResolvedFaceData } from '../resolve/minecraft_block_resolver';
+import type { NBTBlockData } from '../compose/scene.svelte';
+
+export type ResolvedBlock = NBTBlockData & { data: BlockData[]; nameResolver: BlockNameResolver };
 
 export type UV = [number, number, number, number];
 

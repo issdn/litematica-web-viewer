@@ -3,7 +3,7 @@
 	import Model from './Model.svelte';
 	import { BlockNameResolver } from '$lib/resolve/block_name_resolver';
 	import { setContext } from 'svelte';
-	import { scene, type NBTBlockData } from '$lib/compose/scene.svelte';
+	import { type NBTBlockData } from '$lib/compose/scene.svelte';
 	import Blocks from '$lib/blocks.json';
 
 	let {

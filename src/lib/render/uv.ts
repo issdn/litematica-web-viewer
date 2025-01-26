@@ -1,5 +1,5 @@
 import { Facing } from '$lib/types/common';
-import type { BlockRotation, FacesDataArray } from '../types/common';
+import type { BlockRotation, UV } from '../types/common';
 
 type UVData = {
 	dx: number;
@@ -85,7 +85,7 @@ export function resetFaceRotation(
 	return uvs;
 }
 
-export function createUVFace({ rotation, uv }: FacesDataArray[number]) {
+export function createUVFace({ rotation, uv }: { rotation: number; uv: UV }) {
 	rotation ??= 0;
 
 	const [u1, v1, u2, v2] = uv;

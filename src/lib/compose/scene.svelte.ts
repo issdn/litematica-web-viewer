@@ -7,9 +7,11 @@ import {
 } from '../parse/schematic_parser';
 import { BlockNameResolver, type NamespaceFile } from '../resolve/block_name_resolver';
 import { ServerMinecraftAssetsManager } from '../textures/assets_manager';
-import type { NBTBlockState, NBTBlockStateProperties } from '../types/common';
+import type { NBTBlockState, NBTBlockStateProperties, ResolvedBlock } from '../types/common';
 import type { MinecraftAssetsManager } from '../textures/minecraft_assets_manager.i';
 import { TextureAtlas } from '../textures/texture_atlas';
+import { MinecraftBlockResolver } from '../resolve/minecraft_block_resolver';
+import { toast } from 'svelte-sonner';
 
 export type NBTBlockData = NBTBlockState & {
 	instances: Vector3[];
@@ -39,6 +41,8 @@ class Scene {
 
 	middle: Vector3 = $state(new Vector3(0, 0, 0));
 
+	private _blocks: ResolvedBlock[] | null = $state(null);
+
 	private _atlas: TextureAtlas | null = $state(null);
 
 	private _ground = $derived.by(() => this.buildGround());
@@ -46,6 +50,14 @@ class Scene {
 	private _schematic = $derived.by(() => this.buildSchematic(this.regions));
 
 	private _assetsManager = $state<MinecraftAssetsManager>(serverAssetsManager);
+
+	get blocks() {
+		return this._blocks!;
+	}
+
+	set blocks(value: ResolvedBlock[]) {
+		this._blocks = value;
+	}
 
 	get atlas() {
 		return this._atlas!;
@@ -150,3 +162,52 @@ class Scene {
 }
 
 export const scene = new Scene();
+
+export async function resolveAllBlocks(
+	blocks: NBTBlockData[],
+	assetsManager: MinecraftAssetsManager
+) {
+	const atlas = new TextureAtlas();
+
+	const result = await Promise.allSettled(
+		blocks.map(({ Name, Properties, instances }: NBTBlockData) => {
+			const nameResolver = BlockNameResolver.parse(Name);
+			return (async () => ({
+				data: await new MinecraftBlockResolver(
+					Properties,
+					assetsManager,
+					nameResolver,
+					atlas
+				).resolve(),
+				Name,
+				Properties,
+				instances,
+				nameResolver
+			}))();
+		})
+	);
+
+	atlas.create();
+
+	const data = result.reduce((prev, value) => {
+		if (value.status === 'rejected') {
+			if (value.reason instanceof Error) {
+				switch (value.reason.name) {
+					case 'ResolvingError':
+						toast.error(value.reason.message);
+						break;
+					default:
+						toast.error("Couldn't resolve the block from given properties.");
+						break;
+				}
+			}
+			toast.error("A block couldn't be resolved.");
+			return prev;
+		} else {
+			return [...prev, value.value];
+		}
+	}, [] as ResolvedBlock[]);
+
+	scene.atlas = atlas;
+	scene.blocks = data;
+}

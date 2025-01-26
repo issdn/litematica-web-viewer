@@ -11,8 +11,6 @@
 	import { CameraType, type Props as SchematicProps } from '$lib/types/schematic/schematic.js';
 	import { toast } from 'svelte-sonner';
 	import CC from 'camera-controls';
-	import { scene } from '../../compose/scene.svelte';
-	import { TextureAtlas } from '../../textures/texture_atlas';
 	import Dropzone from '../ui/Dropzone.svelte';
 
 	const {
@@ -39,8 +37,6 @@
 		}
 		return url;
 	}
-
-	scene.atlas = new TextureAtlas();
 
 	const searchParams = page.url.searchParams;
 	const givenCameraPosition = searchParams.get('cameraPosition');

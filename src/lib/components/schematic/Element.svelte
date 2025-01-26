@@ -4,11 +4,12 @@
 		BoxGeometry,
 		Vector3,
 		Quaternion,
-		type Vector3Tuple
+		type Vector3Tuple,
+		DynamicDrawUsage
 	} from 'three';
 	import { Instance, InstancedMesh } from '@threlte/extras';
 	import { getContext } from 'svelte';
-	import { Facing, type BlockRotation, type FacesDataArray } from '$lib/types/common';
+	import { Facing, type BlockRotation, type FacesDataArray, type UV } from '$lib/types/common';
 	import type { ResolvedElements, ResolvedFaceData } from '$lib/resolve/minecraft_block_resolver';
 	import { Texture, Vector2 } from 'three';
 	import Face from './Face.svelte';
@@ -56,66 +57,72 @@
 
 	const size = [to[0] - from[0], to[1] - from[1], to[2] - from[2]];
 
-	facesData.forEach((item) => {
-		if (item.uv == undefined) {
-			const pv = 16 - to[1];
-			switch (item.facing) {
-				case Facing.North:
-				case Facing.South:
-					item['uv'] = [from[0], pv, from[0] + size[0], pv + to[1]];
-					break;
-				case Facing.Up:
-					item['uv'] = [from[0], from[2], from[0] + size[0], from[2] + size[2]];
-					break;
-				case Facing.Down: {
-					const pub = 16 - to[0];
-					const pvb = 16 - to[2];
-					item['uv'] = [pub, pvb, pub + to[0] - from[0], pvb + to[2] - from[2]];
-					break;
-				}
-				case Facing.East: {
-					const pu = 16 - to[2];
-					item['uv'] = [pu, pv, pu + to[2] - from[2], pv + to[1]];
-					break;
-				}
-				case Facing.West: {
-					item['uv'] = [from[2], pv, from[2] + size[2], pv + to[1]];
-					break;
+	const resolveFaces = () =>
+		facesData.flatMap((item) => {
+			let itemUV = item.uv;
+			if (itemUV == undefined) {
+				const pv = 16 - to[1];
+				switch (item.facing) {
+					case Facing.North:
+					case Facing.South:
+						itemUV = [from[0], pv, from[0] + size[0], pv + to[1]];
+						break;
+					case Facing.Up:
+						itemUV = [from[0], from[2], from[0] + size[0], from[2] + size[2]];
+						break;
+					case Facing.Down: {
+						const pub = 16 - to[0];
+						const pvb = 16 - to[2];
+						itemUV = [pub, pvb, pub + to[0] - from[0], pvb + to[2] - from[2]];
+						break;
+					}
+					case Facing.East: {
+						const pu = 16 - to[2];
+						itemUV = [pu, pv, pu + to[2] - from[2], pv + to[1]];
+						break;
+					}
+					case Facing.West: {
+						itemUV = [from[2], pv, from[2] + size[2], pv + to[1]];
+						break;
+					}
 				}
 			}
-		}
-		if (item.texture != null) {
-			const [u1, v1, u2, v2] = item.uv;
-			if (item.animation == null) {
-				const { dx, dy, h, w } = scene.atlas.get(item.texture)!;
-				const scaleFactor = w / 16;
-				item.uv = [
-					u1 * scaleFactor + dx,
-					v1 * scaleFactor + dy,
-					u2 * scaleFactor + dx,
-					v2 * scaleFactor + dy
-				];
-				item.uv = createUVFace(item);
-				if (uvlock) {
-					item.uv = resetFaceRotation(item.uv, item.facing, radiansRotation, w, {
-						dx,
-						dy
-					});
+			if (item.texture != null) {
+				const [u1, v1, u2, v2] = itemUV;
+				if (item.animation == null) {
+					const { dx, dy, h, w } = scene.atlas.get(item.texture)!;
+					const scaleFactor = w / 16;
+					itemUV = [
+						u1 * scaleFactor + dx,
+						v1 * scaleFactor + dy,
+						u2 * scaleFactor + dx,
+						v2 * scaleFactor + dy
+					];
+					itemUV = createUVFace({ uv: itemUV as UV, rotation: item.rotation });
+					if (uvlock) {
+						itemUV = resetFaceRotation(itemUV, item.facing, radiansRotation, w, {
+							dx,
+							dy
+						});
+					}
+					itemUV = itemUV.map((v) => v / scene.atlas.size);
+				} else {
+					const texture = scene.atlas.getAnimation(item.texture)!;
+					const aspect = 16 * (texture.image.height / texture.image.width);
+					itemUV = [u1 / 16, v1 / aspect, u2 / 16, v2 / aspect];
+					itemUV = createUVFace({ uv: itemUV as UV, rotation: item.rotation });
+					if (uvlock) {
+						itemUV = resetFaceRotation(itemUV, item.facing, radiansRotation, 16, {
+							dx: 0,
+							dy: 0
+						});
+					}
 				}
-				item.uv = item.uv.map((v) => v / scene.atlas.size);
 			} else {
-				const texture = scene.atlas.getAnimation(item.texture)!;
-				const aspect = 16 * (texture.image.height / texture.image.width);
-				item.uv = [u1 / 16, v1 / aspect, u2 / 16, v2 / aspect];
-				item.uv = createUVFace(item);
-				if (uvlock) {
-					item.uv = resetFaceRotation(item.uv, item.facing, radiansRotation, 16, { dx: 0, dy: 0 });
-				}
+				itemUV = createUVFace({ uv: itemUV as UV, rotation: item.rotation });
 			}
-		} else {
-			item.uv = createUVFace(item);
-		}
-	});
+			return itemUV;
+		});
 
 	function getTypedFace(face: FacesDataArray[keyof FacesDataArray]) {
 		return face as ResolvedFaceData & { facing: Facing };
@@ -140,6 +147,12 @@
 	}
 
 	let ref = $state() as InstancedMesh;
+
+	const geometry = new BoxGeometry(...size).toNonIndexed();
+
+	$effect(() => {
+		geometry.setAttribute('uv', new Float32BufferAttribute(resolveFaces(), 2));
+	});
 
 	let { quaternion, scale } = $derived.by(() => {
 		const quaternion = ref.quaternion.clone();
@@ -187,15 +200,7 @@
 	limit={instances.length}
 	receiveShadow={shade && !transparent}
 	castShadow={false}
-	oncreate={(ref) => {
-		ref.geometry = new BoxGeometry(...size).toNonIndexed().setAttribute(
-			'uv',
-			new Float32BufferAttribute(
-				facesData.flatMap(({ uv }) => uv),
-				2
-			)
-		);
-	}}
+	{geometry}
 >
 	{#each instances as position}
 		<Instance
