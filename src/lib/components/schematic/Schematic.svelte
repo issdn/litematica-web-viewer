@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { T, useThrelte } from '@threlte/core';
-	import { OrthographicCamera, Vector3 } from 'three';
+	import { Box3, Group, OrthographicCamera, Sphere, Vector3, type Object3DEventMap } from 'three';
 	import Block from './Block.svelte';
 	import { resolveAllBlocks, scene, type NBTBlockData } from '$lib/compose/scene.svelte';
 	import { CameraType, type Props } from '$lib/types/schematic/schematic';
@@ -32,6 +32,20 @@
 	});
 
 	resolveAllBlocks(blocks, scene.assetsManager);
+
+	let schem: Group<Object3DEventMap> = $state(new Group());
+
+	let far = $derived.by(() => {
+		const boundingSphere = new Sphere();
+
+		new Box3().setFromObject(schem).getBoundingSphere(boundingSphere);
+
+		const distance = cameraPosition.distanceTo(boundingSphere.center);
+
+		const maxDistance = distance + boundingSphere.radius;
+
+		return maxDistance * 1.1;
+	});
 </script>
 
 <svelte:window bind:innerWidth bind:innerHeight />
@@ -60,6 +74,7 @@
 		bind:ref={cam}
 		makeDefault
 		manual={true}
+		{far}
 		left={(-frustumSize * aspect) / 2}
 		right={(frustumSize * aspect) / 2}
 		top={frustumSize / 2}
@@ -68,7 +83,7 @@
 		{@render cc()}
 	</T.OrthographicCamera>
 {:else}
-	<T.PerspectiveCamera makeDefault>
+	<T.PerspectiveCamera makeDefault {far}>
 		{@render cc()}
 	</T.PerspectiveCamera>
 {/if}
@@ -87,7 +102,7 @@
 <!-- {@render renderBlocks(ground)} -->
 
 {#if scene.blocks != null && scene.atlas != null}
-	<T.Group>
+	<T.Group bind:ref={schem} oncreate={(ref) => console.log()}>
 		{#each scene.blocks as block}
 			<Block {...block} />
 		{/each}
