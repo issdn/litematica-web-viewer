@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { resolveAllBlocks, scene, serverAssetsManager } from '../../compose/scene.svelte';
+	import { scene, serverAssetsManager } from '../../compose/scene.svelte';
 	import { ClientMinecraftAssetsManager } from '../../textures/client_assets_manager';
 	import { ZipFileService } from '../../textures/zip_file_service';
 	import { StandardFileService } from '../../textures/standard_file_service';
@@ -28,7 +28,7 @@
 			});
 			const fileService = new ZipFileService(zipResult);
 			const assetsManager = new ClientMinecraftAssetsManager(fileService, serverAssetsManager, '');
-			await resolveAllBlocks(await scene.schematic, assetsManager);
+			await scene.resolveAllBlocks(await scene.schematic, assetsManager);
 		} else {
 			const result = (await readEntry(item)).flat();
 			const files = ClientMinecraftAssetsManager.resolveFilesFromDropzone(result);
@@ -39,7 +39,7 @@
 				serverAssetsManager,
 				rootName
 			);
-			await resolveAllBlocks(await scene.schematic, assetsManager);
+			await scene.resolveAllBlocks(await scene.schematic, assetsManager);
 		}
 	}
 

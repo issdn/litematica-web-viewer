@@ -41,6 +41,8 @@ class Scene {
 
 	middle: Vector3 = $state(new Vector3(0, 0, 0));
 
+	ready: boolean = $state(false);
+
 	private _blocks: ResolvedBlock[] | null = $state(null);
 
 	private _atlas: TextureAtlas | null = $state(null);
@@ -48,8 +50,6 @@ class Scene {
 	private _ground = $derived.by(() => this.buildGround());
 
 	private _schematic = $derived.by(() => this.buildSchematic(this.regions));
-
-	private _assetsManager = $state<MinecraftAssetsManager>(serverAssetsManager);
 
 	get blocks() {
 		return this._blocks!;
@@ -73,18 +73,6 @@ class Scene {
 
 	get schematic() {
 		return this._schematic;
-	}
-
-	get assetsManager(): MinecraftAssetsManager {
-		return this._assetsManager;
-	}
-
-	set assetsManager(value: MinecraftAssetsManager | null) {
-		if (value == null) {
-			this._assetsManager = serverAssetsManager;
-		} else {
-			this._assetsManager = value;
-		}
 	}
 
 	private async buildGround(size: number = 16) {
@@ -114,6 +102,7 @@ class Scene {
 		const { x, y, z } = newMiddle;
 		newMiddle.set(Math.floor(x), Math.floor(y), Math.floor(z));
 		this.middle = newMiddle;
+		console.log(newMiddle);
 
 		for (const region of regions) {
 			const { BlockStatePalette, BlockStates, Size, Position } = region;
@@ -159,55 +148,51 @@ class Scene {
 	) {
 		return `${block.Name}#${JSON.stringify(block.Properties)}`;
 	}
+
+	async resolveAllBlocks(blocks: NBTBlockData[], assetsManager: MinecraftAssetsManager) {
+		this.ready = false;
+		const atlas = new TextureAtlas();
+
+		const result = await Promise.allSettled(
+			blocks.map(({ Name, Properties, instances }: NBTBlockData) => {
+				const nameResolver = BlockNameResolver.parse(Name);
+				return (async () => ({
+					data: await new MinecraftBlockResolver(
+						Properties,
+						assetsManager,
+						nameResolver,
+						atlas
+					).resolve(),
+					Name,
+					Properties,
+					instances,
+					nameResolver
+				}))();
+			})
+		);
+
+		atlas.create();
+
+		const data = result.reduce((prev, value) => {
+			if (value.status === 'rejected') {
+				if (value.reason instanceof Error) {
+					switch (value.reason.name) {
+						case 'ResolvingError':
+							toast.error(value.reason.message);
+							break;
+					}
+				}
+				toast.error("A block couldn't be resolved.");
+				return prev;
+			} else {
+				return [...prev, value.value];
+			}
+		}, [] as ResolvedBlock[]);
+
+		this.atlas = atlas;
+		this.blocks = data;
+		this.ready = true;
+	}
 }
 
 export const scene = new Scene();
-
-export async function resolveAllBlocks(
-	blocks: NBTBlockData[],
-	assetsManager: MinecraftAssetsManager
-) {
-	const atlas = new TextureAtlas();
-
-	const result = await Promise.allSettled(
-		blocks.map(({ Name, Properties, instances }: NBTBlockData) => {
-			const nameResolver = BlockNameResolver.parse(Name);
-			return (async () => ({
-				data: await new MinecraftBlockResolver(
-					Properties,
-					assetsManager,
-					nameResolver,
-					atlas
-				).resolve(),
-				Name,
-				Properties,
-				instances,
-				nameResolver
-			}))();
-		})
-	);
-
-	atlas.create();
-
-	const data = result.reduce((prev, value) => {
-		if (value.status === 'rejected') {
-			if (value.reason instanceof Error) {
-				switch (value.reason.name) {
-					case 'ResolvingError':
-						toast.error(value.reason.message);
-						break;
-					default:
-						toast.error("Couldn't resolve the block from given properties.");
-						break;
-				}
-			}
-			toast.error("A block couldn't be resolved.");
-			return prev;
-		} else {
-			return [...prev, value.value];
-		}
-	}, [] as ResolvedBlock[]);
-
-	scene.atlas = atlas;
-	scene.blocks = data;
-}

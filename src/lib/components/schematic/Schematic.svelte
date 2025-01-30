@@ -10,7 +10,7 @@
 		type Object3DEventMap
 	} from 'three';
 	import Block from './Block.svelte';
-	import { resolveAllBlocks, scene, type NBTBlockData } from '$lib/compose/scene.svelte';
+	import { scene, serverAssetsManager } from '$lib/compose/scene.svelte';
 	import { CameraType, type Props } from '$lib/types/schematic/schematic';
 	import CC from 'camera-controls';
 	import CameraControls from '../../compose/camera_controls';
@@ -42,7 +42,7 @@
 		camera.updateMatrixWorld();
 	});
 
-	resolveAllBlocks(blocks, scene.assetsManager);
+	scene.resolveAllBlocks(blocks, serverAssetsManager);
 
 	let schem: Group<Object3DEventMap> = $state(new Group());
 
@@ -117,7 +117,7 @@
 
 <!-- {@render renderBlocks(ground)} -->
 
-{#if scene.blocks != null && scene.atlas != null}
+{#if scene.ready}
 	<T.Group bind:ref={schem}>
 		{#each scene.blocks as block}
 			<Block {...block} />

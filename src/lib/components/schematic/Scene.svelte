@@ -6,12 +6,13 @@
 	import { stringifyVector3, tryParseVector3 } from '$root/src/lib/parse/search_params.js';
 	import * as Tabs from '$lib/components/ui/tabs';
 	import Button from '$lib/components/ui/button/button.svelte';
-	import { Link, Rotate3D } from 'lucide-svelte';
+	import { FolderX, Link, Rotate3D } from 'lucide-svelte';
 	import * as Tooltip from '$lib/components/ui/tooltip/index.js';
 	import { CameraType, type Props as SchematicProps } from '$lib/types/schematic/schematic.js';
 	import { toast } from 'svelte-sonner';
 	import CC from 'camera-controls';
 	import Dropzone from '../ui/Dropzone.svelte';
+	import { scene, serverAssetsManager } from '../../compose/scene.svelte';
 
 	const {
 		blocks,
@@ -62,7 +63,9 @@
 
 <svelte:window bind:innerWidth bind:innerHeight />
 
-<Dropzone />
+{#if scene.ready}
+	<Dropzone />
+{/if}
 
 <div style="width: {innerWidth}px; height: {innerHeight}px;">
 	<Canvas
@@ -87,47 +90,63 @@
 </div>
 
 <div class="absolute bottom-10 left-1/2 -translate-x-1/2">
-	<div class="flex flex-row gap-1">
+	<div class="flex flex-col gap-1">
 		<Tabs.Root bind:value={cameraType}>
 			<Tabs.List>
 				<Tabs.Trigger value={CameraType.Perspective}>Perspective</Tabs.Trigger>
 				<Tabs.Trigger value={CameraType.Orthographic}>Orthographic</Tabs.Trigger>
 			</Tabs.List>
 		</Tabs.Root>
-		<Tooltip.Provider>
-			<Tooltip.Root>
-				<Tooltip.Trigger>
-					<Button
-						size="icon"
-						variant="outline"
-						onclick={async () => {
-							cameraState = { cameraPosition, target };
-							cameraControls?.setLookAt(...cameraPosition.toArray(), ...target.toArray(), true);
-						}}><Rotate3D /></Button
-					>
-				</Tooltip.Trigger>
-				<Tooltip.Content>
-					<p>Reset camera to the initial state.</p>
-				</Tooltip.Content>
-			</Tooltip.Root>
-		</Tooltip.Provider>
-		<Tooltip.Provider>
-			<Tooltip.Root>
-				<Tooltip.Trigger>
-					<Button
-						size="icon"
-						variant="outline"
-						onclick={async () => {
-							navigator.clipboard.writeText(createUrl(cameraState).toString()).then(() => {
-								toast.success('Copied!');
-							});
-						}}><Link /></Button
-					>
-				</Tooltip.Trigger>
-				<Tooltip.Content>
-					<p>Get a link with your specific camera setup!</p>
-				</Tooltip.Content>
-			</Tooltip.Root>
-		</Tooltip.Provider>
+		<div class="flex flex-row gap-1">
+			<Tooltip.Provider>
+				<Tooltip.Root>
+					<Tooltip.Trigger>
+						<Button
+							disabled={!scene.ready}
+							size="icon"
+							variant="outline"
+							onclick={async () => {
+								cameraState = { cameraPosition, target };
+								cameraControls?.setLookAt(...cameraPosition.toArray(), ...target.toArray(), true);
+							}}><Rotate3D /></Button
+						>
+					</Tooltip.Trigger>
+					<Tooltip.Content>
+						<p>Reset camera to the initial state.</p>
+					</Tooltip.Content>
+				</Tooltip.Root>
+				<Tooltip.Root>
+					<Tooltip.Trigger>
+						<Button
+							disabled={!scene.ready}
+							size="icon"
+							variant="outline"
+							onclick={async () => {
+								navigator.clipboard.writeText(createUrl(cameraState).toString()).then(() => {
+									toast.success('Copied!');
+								});
+							}}><Link /></Button
+						>
+					</Tooltip.Trigger>
+					<Tooltip.Content>
+						<p>Get a link with your specific camera setup!</p>
+					</Tooltip.Content>
+				</Tooltip.Root>
+				<Tooltip.Root>
+					<Tooltip.Trigger>
+						<Button
+							disabled={!scene.ready}
+							size="icon"
+							variant="outline"
+							onclick={() => scene.resolveAllBlocks(blocks, serverAssetsManager)}
+							><FolderX /></Button
+						>
+					</Tooltip.Trigger>
+					<Tooltip.Content>
+						<p>Remove texture pack</p>
+					</Tooltip.Content>
+				</Tooltip.Root>
+			</Tooltip.Provider>
+		</div>
 	</div>
 </div>
