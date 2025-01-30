@@ -210,5 +210,4 @@ export async function resolveAllBlocks(
 
 	scene.atlas = atlas;
 	scene.blocks = data;
-	console.log('done');
 }

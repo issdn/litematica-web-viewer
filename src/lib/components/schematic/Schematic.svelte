@@ -106,9 +106,9 @@
 
 <!-- <Sky elevation={1} /> -->
 
-<T.AmbientLight />
+<T.AmbientLight color={0xffffff} intensity={0.8} />
 
-<T.DirectionalLight intensity={1} castShadow position={[4, 4, 12]} />
+<!-- <T.DirectionalLight color={0xffffff} intensity={1} castShadow position={[12, 12, 12]} /> -->
 
 <!-- <T.Mesh position.y={-8} rotation.x={-Math.PI / 2} receiveShadow>
 	<T.PlaneGeometry args={[50 * 16, 50 * 16]} />
