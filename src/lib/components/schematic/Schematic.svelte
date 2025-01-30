@@ -1,34 +1,45 @@
 <script lang="ts">
-	import { T, useThrelte } from '@threlte/core';
-	import { Box3, Group, OrthographicCamera, Sphere, Vector3, type Object3DEventMap } from 'three';
+	import { T, useTask, useThrelte } from '@threlte/core';
+	import {
+		Box3,
+		Group,
+		OrthographicCamera,
+		PerspectiveCamera,
+		Sphere,
+		Vector3,
+		type Object3DEventMap
+	} from 'three';
 	import Block from './Block.svelte';
 	import { resolveAllBlocks, scene, type NBTBlockData } from '$lib/compose/scene.svelte';
 	import { CameraType, type Props } from '$lib/types/schematic/schematic';
-	import CameraControls from '../../compose/CameraControls.svelte';
 	import CC from 'camera-controls';
+	import CameraControls from '../../compose/camera_controls';
 
 	let {
 		cameraPosition,
 		frustumSize,
 		target,
-		camera,
+		cameraType,
 		cameraState = $bindable(null),
 		blocks,
 		cameraControls = $bindable(null)
 	}: Props = $props();
 
-	const { renderer } = useThrelte();
+	const { renderer, dom, invalidate } = useThrelte();
 
 	let innerWidth = $state(0);
 	let innerHeight = $state(0);
 	let aspect = $derived(innerWidth / innerHeight);
 
-	let cam: OrthographicCamera | undefined = $state(undefined);
+	let initCamera =
+		cameraType == CameraType.Perspective ? new PerspectiveCamera() : new OrthographicCamera();
+
+	let camera: OrthographicCamera | PerspectiveCamera = $state(initCamera);
 
 	$effect(() => {
 		renderer.setSize(innerWidth, innerHeight);
-		cam?.updateProjectionMatrix();
-		cam?.updateMatrixWorld();
+		camera.updateProjectionMatrix();
+		camera.updateMatrixWorld();
 	});
 
 	resolveAllBlocks(blocks, scene.assetsManager);
@@ -46,32 +57,41 @@
 
 		return maxDistance * 1.1;
 	});
+
+	cameraControls = new CameraControls(dom, initCamera);
+	cameraControls.addEventListener('controlend', (e) => {
+		const target = (e as any).target as CC;
+		cameraState = {
+			cameraPosition: target.camera.position,
+			target: target.getTarget(new Vector3())
+		};
+	});
+	cameraControls.setLookAt(
+		...(cameraState?.cameraPosition.toArray() ?? cameraPosition.toArray()),
+		...(cameraState?.target.toArray() ?? target.toArray())
+	);
+
+	$effect(() => {
+		cameraControls.camera = camera;
+		console.log(cameraControls.camera);
+		cameraControls.update(0);
+	});
+
+	useTask(
+		(delta) => {
+			if (cameraControls.update(delta)) {
+				invalidate();
+			}
+		},
+		{ autoInvalidate: false }
+	);
 </script>
 
 <svelte:window bind:innerWidth bind:innerHeight />
 
-{#snippet cc()}
-	<CameraControls
-		oncreate={(ref) => {
-			ref.setLookAt(
-				...(cameraState?.cameraPosition.toArray() ?? cameraPosition.toArray()),
-				...(cameraState?.target.toArray() ?? target.toArray())
-			);
-			cameraControls = ref;
-		}}
-		oncontrolend={(e) => {
-			const target = (e as any).target as CC;
-			cameraState = {
-				cameraPosition: target.camera.position,
-				target: target.getTarget(new Vector3())
-			};
-		}}
-	/>
-{/snippet}
-
-{#if camera == CameraType.Orthographic}
+{#if cameraType == CameraType.Orthographic}
 	<T.OrthographicCamera
-		bind:ref={cam}
+		bind:ref={camera as OrthographicCamera}
 		makeDefault
 		manual={true}
 		{far}
@@ -79,13 +99,9 @@
 		right={(frustumSize * aspect) / 2}
 		top={frustumSize / 2}
 		bottom={-frustumSize / 2}
-	>
-		{@render cc()}
-	</T.OrthographicCamera>
+	/>
 {:else}
-	<T.PerspectiveCamera makeDefault {far}>
-		{@render cc()}
-	</T.PerspectiveCamera>
+	<T.PerspectiveCamera bind:ref={camera as PerspectiveCamera} makeDefault {far} />
 {/if}
 
 <!-- <Sky elevation={1} /> -->

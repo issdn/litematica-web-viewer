@@ -6,5 +6,8 @@ export default defineConfig({
 	assetsInclude: ['**/*.litematic'],
 	test: {
 		include: ['src/test/**/*.{test,spec}.{js,ts}']
+	},
+	ssr: {
+		noExternal: ['camera-controls']
 	}
 });

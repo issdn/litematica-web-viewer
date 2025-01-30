@@ -44,7 +44,7 @@
 
 	let cameraControls: CC | null = $state(null);
 
-	let camera: CameraType = $state(CameraType.Perspective);
+	let cameraType: CameraType = $state(CameraType.Perspective);
 	let cameraState: SchematicProps['cameraState'] = $state(null);
 
 	let innerWidth = $state(0);
@@ -78,7 +78,7 @@
 			bind:cameraState
 			bind:cameraControls
 			{blocks}
-			{camera}
+			{cameraType}
 			{cameraPosition}
 			{frustumSize}
 			{target}
@@ -88,7 +88,7 @@
 
 <div class="absolute bottom-10 left-1/2 -translate-x-1/2">
 	<div class="flex flex-row gap-1">
-		<Tabs.Root bind:value={camera}>
+		<Tabs.Root bind:value={cameraType}>
 			<Tabs.List>
 				<Tabs.Trigger value={CameraType.Perspective}>Perspective</Tabs.Trigger>
 				<Tabs.Trigger value={CameraType.Orthographic}>Orthographic</Tabs.Trigger>

@@ -8,7 +8,7 @@ export const enum CameraType {
 }
 
 export type Props = {
-	camera: CameraType;
+	cameraType: CameraType;
 	cameraPosition: Vector3;
 	frustumSize: number;
 	target: Vector3;
