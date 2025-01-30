@@ -55,7 +55,7 @@
 
 		const maxDistance = distance + boundingSphere.radius;
 
-		return maxDistance * 1.1;
+		return maxDistance;
 	});
 
 	cameraControls = new CameraControls(dom, initCamera);
@@ -73,7 +73,7 @@
 
 	$effect(() => {
 		cameraControls.camera = camera;
-		console.log(cameraControls.camera);
+		cameraControls.maxDistance = far * 1.75;
 		cameraControls.update(0);
 	});
 
@@ -94,14 +94,14 @@
 		bind:ref={camera as OrthographicCamera}
 		makeDefault
 		manual={true}
-		{far}
+		far={far * 2}
 		left={(-frustumSize * aspect) / 2}
 		right={(frustumSize * aspect) / 2}
 		top={frustumSize / 2}
 		bottom={-frustumSize / 2}
 	/>
 {:else}
-	<T.PerspectiveCamera bind:ref={camera as PerspectiveCamera} makeDefault {far} />
+	<T.PerspectiveCamera bind:ref={camera as PerspectiveCamera} makeDefault far={far * 2} />
 {/if}
 
 <!-- <Sky elevation={1} /> -->
@@ -118,11 +118,13 @@
 <!-- {@render renderBlocks(ground)} -->
 
 {#if scene.blocks != null && scene.atlas != null}
-	<T.Group bind:ref={schem} oncreate={(ref) => console.log()}>
+	<T.Group bind:ref={schem}>
 		{#each scene.blocks as block}
 			<Block {...block} />
 		{/each}
 	</T.Group>
+{:else}
+	<p>loading</p>
 {/if}
 
 <!-- {#await scene.ground then blocks}
