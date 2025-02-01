@@ -36,8 +36,8 @@ importers:
         specifier: ^3.10.1
         version: 3.10.1
       prismarine-nbt:
-        specifier: file:../prismarine-nbt
-        version: file:../prismarine-nbt
+        specifier: git+https://github.com/issdn/prismarine-nbt.git
+        version: https://codeload.github.com/issdn/prismarine-nbt/tar.gz/3abe9d2fac1713e0b9609333e25aebf868c368aa
       protodef:
         specifier: ^1.18.0
         version: 1.18.0
@@ -2287,8 +2287,9 @@ packages:
     engines: {node: '>=14'}
     hasBin: true
 
-  prismarine-nbt@file:../prismarine-nbt:
-    resolution: {directory: ../prismarine-nbt, type: directory}
+  prismarine-nbt@https://codeload.github.com/issdn/prismarine-nbt/tar.gz/3abe9d2fac1713e0b9609333e25aebf868c368aa:
+    resolution: {tarball: https://codeload.github.com/issdn/prismarine-nbt/tar.gz/3abe9d2fac1713e0b9609333e25aebf868c368aa}
+    version: 2.7.0
 
   process-nextick-args@2.0.1:
     resolution: {integrity: sha512-3ouUOpQhtgrbOa17J7+uxOTpITYWaGP7/AhoR3+A+/1e9skrzelGi/dXzEYyvbxubEF6Wn2ypscTKiKJFFn1ag==}
@@ -4714,7 +4715,7 @@ snapshots:
 
   prettier@3.4.2: {}
 
-  prismarine-nbt@file:../prismarine-nbt:
+  prismarine-nbt@https://codeload.github.com/issdn/prismarine-nbt/tar.gz/3abe9d2fac1713e0b9609333e25aebf868c368aa:
     dependencies:
       buffer: 6.0.3
       pako: 2.1.0
