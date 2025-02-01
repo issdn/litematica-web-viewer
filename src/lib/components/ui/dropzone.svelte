@@ -5,6 +5,7 @@
 	import { StandardFileService } from '../../textures/standard_file_service';
 	import { FolderArchive, FolderUp } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
+	import { getRegions } from '../../parse/schematic_parser';
 
 	class UploadException extends Error {}
 
@@ -18,29 +19,45 @@
 		if (items == null) throw new UploadException("Couldn't access any files.");
 		const item = items[0].webkitGetAsEntry();
 		if (item?.name.includes('.')) {
-			if (!item.name.endsWith('zip')) {
-				toast('Drag either a .zip file or a folder.');
-				return;
+			switch (item.name.split('.').at(-1)) {
+				case 'zip':
+					await handleZipTxt(item as FileSystemFileEntry);
+					break;
+				case 'litematic':
+					await handleLitematic(item);
+					break;
+				default:
+					throw new UploadException('Only .zip and .litematic allowed.');
 			}
-			const jszip = await import('jszip');
-			const zipResult = await jszip.loadAsync(await readFileEntry(item as FileSystemFileEntry), {
-				createFolders: false
-			});
-			const fileService = new ZipFileService(zipResult);
-			const assetsManager = new ClientMinecraftAssetsManager(fileService, serverAssetsManager, '');
-			await scene.resolveAllBlocks(await scene.schematic, assetsManager);
 		} else {
-			const result = (await readEntry(item)).flat();
-			const files = ClientMinecraftAssetsManager.resolveFilesFromDropzone(result);
-			const fileService = new StandardFileService(files);
-			const rootName = result[0].path.split('/')[0];
-			const assetsManager = new ClientMinecraftAssetsManager(
-				fileService,
-				serverAssetsManager,
-				rootName
-			);
-			await scene.resolveAllBlocks(await scene.schematic, assetsManager);
+			await handleFolderTxt(item);
 		}
+	}
+
+	async function handleLitematic(item: FileSystemEntry) {
+		const file = (await readEntry(item))[0].file;
+		scene.schematic = scene.buildSchematic(await getRegions(await file.arrayBuffer()));
+	}
+
+	async function handleZipTxt(item: FileSystemFileEntry) {
+		const jszip = await import('jszip');
+		const zipResult = await jszip.loadAsync(await readFileEntry(item), {
+			createFolders: false
+		});
+		const fileService = new ZipFileService(zipResult);
+		scene.assetsManager = new ClientMinecraftAssetsManager(fileService, serverAssetsManager, '');
+	}
+
+	async function handleFolderTxt(item: FileSystemEntry | null) {
+		const result = (await readEntry(item)).flat();
+		const files = ClientMinecraftAssetsManager.resolveFilesFromDropzone(result);
+		const fileService = new StandardFileService(files);
+		const rootName = result[0].path.split('/')[0];
+		scene.assetsManager = new ClientMinecraftAssetsManager(
+			fileService,
+			serverAssetsManager,
+			rootName
+		);
 	}
 
 	async function readEntry(entry: FileSystemEntry | null): Promise<{ file: File; path: string }[]> {
@@ -127,7 +144,15 @@
 		isDropping = false;
 		isUploading = true;
 		count = 0;
-		await readFiles(e.dataTransfer?.items);
+		try {
+			await readFiles(e.dataTransfer?.items);
+		} catch (e) {
+			if (e instanceof Error) {
+				toast.error(e.message);
+			} else {
+				toast.error('Unknown error occured while loading the texturepack.');
+			}
+		}
 		isUploading = false;
 	}}
 />

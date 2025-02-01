@@ -21,7 +21,6 @@
 		target,
 		cameraType,
 		cameraState = $bindable(null),
-		blocks,
 		cameraControls = $bindable(null)
 	}: Props = $props();
 
@@ -41,8 +40,6 @@
 		camera.updateProjectionMatrix();
 		camera.updateMatrixWorld();
 	});
-
-	scene.resolveAllBlocks(blocks, serverAssetsManager);
 
 	let schem: Group<Object3DEventMap> = $state(new Group());
 
@@ -117,15 +114,15 @@
 
 <!-- {@render renderBlocks(ground)} -->
 
-{#if scene.ready}
+{#await scene.instance}
+	<p>loading</p>
+{:then blocks}
 	<T.Group bind:ref={schem}>
-		{#each scene.blocks as block}
+		{#each blocks as block}
 			<Block {...block} />
 		{/each}
 	</T.Group>
-{:else}
-	<p>loading</p>
-{/if}
+{/await}
 
 <!-- {#await scene.ground then blocks}
 	<T.Group>

@@ -4,7 +4,7 @@
 
 	let { data } = $props();
 
-	scene.regions = Object.values(data);
+	scene.schematic = scene.buildSchematic(data.regions);
 
 	let maxAxis = $derived.by(() => {
 		const { x, y, z } = scene.max;
@@ -12,8 +12,4 @@
 	});
 </script>
 
-{#await scene.schematic}
-	<h1>Loading</h1>
-{:then blocks}
-	<Scene {maxAxis} {blocks} />
-{/await}
+<Scene {maxAxis} />

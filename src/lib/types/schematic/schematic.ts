@@ -16,6 +16,5 @@ export type Props = {
 		cameraPosition: Vector3;
 		target: Vector3;
 	} | null;
-	blocks: NBTBlockData[];
 	cameraControls: CC | null;
 };

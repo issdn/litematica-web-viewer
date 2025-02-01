@@ -10,7 +10,7 @@ import { ServerMinecraftAssetsManager } from '../textures/assets_manager';
 import type { NBTBlockState, NBTBlockStateProperties, ResolvedBlock } from '../types/common';
 import type { MinecraftAssetsManager } from '../textures/minecraft_assets_manager.i';
 import { TextureAtlas } from '../textures/texture_atlas';
-import { MinecraftBlockResolver } from '../resolve/minecraft_block_resolver';
+import { MinecraftBlockResolver, ResolvingError } from '../resolve/minecraft_block_resolver';
 import { toast } from 'svelte-sonner';
 
 export type NBTBlockData = NBTBlockState & {
@@ -33,9 +33,15 @@ export const serverAssetsManager = new ServerMinecraftAssetsManager('default');
 // files.item(0)!.webkitRelativePath.split('/')[0]
 
 class Scene {
-	groundType = $state(groundTypes.grassBlock);
+	private _schematic: Promise<NBTBlockData[]> | null = $state(null);
 
-	regions = $state<Region<NBTBlockState>[] | null>(null);
+	private _assetsManager: MinecraftAssetsManager = $state(serverAssetsManager);
+
+	private _atlas: TextureAtlas | null = null;
+
+	private _ground = $derived.by(() => this.buildGround());
+
+	groundType = $state(groundTypes.grassBlock);
 
 	max = $state({ x: 0, y: 0, z: 0 });
 
@@ -43,36 +49,28 @@ class Scene {
 
 	ready: boolean = $state(false);
 
-	private _blocks: ResolvedBlock[] | null = $state(null);
-
-	private _atlas: TextureAtlas | null = $state(null);
-
-	private _ground = $derived.by(() => this.buildGround());
-
-	private _schematic = $derived.by(() => this.buildSchematic(this.regions));
-
-	get blocks() {
-		return this._blocks!;
-	}
-
-	set blocks(value: ResolvedBlock[]) {
-		this._blocks = value;
-	}
+	instance = $derived.by(async () => {
+		return await this.buildTexturedBlocks({
+			assetsManager: this._assetsManager,
+			schematic: await this._schematic!
+		});
+	});
 
 	get atlas() {
 		return this._atlas!;
-	}
-
-	set atlas(value: TextureAtlas) {
-		this._atlas = value;
 	}
 
 	get ground() {
 		return this._ground;
 	}
 
-	get schematic() {
-		return this._schematic;
+	set schematic(value: Promise<NBTBlockData[]>) {
+		this._schematic = value;
+	}
+
+	set assetsManager(value: MinecraftAssetsManager | null) {
+		value ??= serverAssetsManager;
+		this._assetsManager = value;
 	}
 
 	private async buildGround(size: number = 16) {
@@ -85,7 +83,7 @@ class Scene {
 		return [{ ...this.groundType, instances }];
 	}
 
-	private async buildSchematic(regions: Region<NBTBlockState>[] | null) {
+	async buildSchematic(regions: Region<NBTBlockState>[] | null) {
 		if (regions == null || regions.length == 0) return [] as NBTBlockData[];
 
 		const blockInstances = new Map<string, Vector3[]>();
@@ -102,7 +100,6 @@ class Scene {
 		const { x, y, z } = newMiddle;
 		newMiddle.set(Math.floor(x), Math.floor(y), Math.floor(z));
 		this.middle = newMiddle;
-		console.log(newMiddle);
 
 		for (const region of regions) {
 			const { BlockStatePalette, BlockStates, Size, Position } = region;
@@ -149,12 +146,17 @@ class Scene {
 		return `${block.Name}#${JSON.stringify(block.Properties)}`;
 	}
 
-	async resolveAllBlocks(blocks: NBTBlockData[], assetsManager: MinecraftAssetsManager) {
-		this.ready = false;
+	private async buildTexturedBlocks({
+		schematic,
+		assetsManager
+	}: {
+		schematic: NBTBlockData[];
+		assetsManager: MinecraftAssetsManager;
+	}) {
 		const atlas = new TextureAtlas();
 
 		const result = await Promise.allSettled(
-			blocks.map(({ Name, Properties, instances }: NBTBlockData) => {
+			schematic.map(({ Name, Properties, instances }: NBTBlockData) => {
 				const nameResolver = BlockNameResolver.parse(Name);
 				return (async () => ({
 					data: await new MinecraftBlockResolver(
@@ -173,7 +175,7 @@ class Scene {
 
 		atlas.create();
 
-		const data = result.reduce((prev, value) => {
+		const blocks = result.reduce((prev, value) => {
 			if (value.status === 'rejected') {
 				if (value.reason instanceof Error) {
 					switch (value.reason.name) {
@@ -189,10 +191,11 @@ class Scene {
 			}
 		}, [] as ResolvedBlock[]);
 
-		this.atlas = atlas;
-		this.blocks = data;
+		this._atlas = atlas;
 		this.ready = true;
+
+		return blocks;
 	}
 }
 
-export const scene = new Scene();
+export let scene = new Scene();

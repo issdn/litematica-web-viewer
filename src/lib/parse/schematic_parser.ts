@@ -1,4 +1,5 @@
 import { Vector3, type Vector3Like } from 'three';
+import type { NBTBlockState } from '../types/common';
 
 type BlockStates = number[][];
 type BlockStatePalette<T extends object> = T[];
@@ -147,6 +148,13 @@ function buildBlockStateArray<T extends object>(
 	};
 }
 
-export { buildBlockStateArray, getMaxCorners, getMinCorners, absoluteVector };
+async function getRegions(file: ArrayBuffer) {
+	const Buffer = (await import('buffer')).Buffer;
+	const { simplify, parse } = await import('prismarine-nbt');
+	const nbt = await parse(Buffer.from(file));
+	return Object.values(simplify(nbt.parsed)['Regions']) as Region<NBTBlockState>[];
+}
+
+export { buildBlockStateArray, getMaxCorners, getMinCorners, absoluteVector, getRegions };
 
 export type { BlockStates, NBTVector3D, Region, Regions };

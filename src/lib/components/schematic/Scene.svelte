@@ -12,13 +12,12 @@
 	import { toast } from 'svelte-sonner';
 	import CC from 'camera-controls';
 	import Dropzone from '../ui/Dropzone.svelte';
-	import { scene, serverAssetsManager } from '../../compose/scene.svelte';
+	import { scene } from '../../compose/scene.svelte';
 
 	const {
-		blocks,
 		maxAxis,
 		additionalUrlParams
-	}: Pick<SchematicProps, 'blocks'> & {
+	}: {
 		maxAxis: number;
 		additionalUrlParams?: Record<string, string>;
 	} = $props();
@@ -80,7 +79,6 @@
 		<Schematic
 			bind:cameraState
 			bind:cameraControls
-			{blocks}
 			{cameraType}
 			{cameraPosition}
 			{frustumSize}
@@ -138,8 +136,7 @@
 							disabled={!scene.ready}
 							size="icon"
 							variant="outline"
-							onclick={() => scene.resolveAllBlocks(blocks, serverAssetsManager)}
-							><FolderX /></Button
+							onclick={() => (scene.assetsManager = null)}><FolderX /></Button
 						>
 					</Tooltip.Trigger>
 					<Tooltip.Content>
