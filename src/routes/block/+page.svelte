@@ -4,7 +4,7 @@
 	import { Vector3 } from 'three';
 	import type { NBTBlockStateProperties } from '$root/src/lib/types/common';
 	import { parseNBTBlockData } from '$root/src/lib/parse/search_params';
-	import type { NBTBlockData } from '$root/src/lib/compose/scene.svelte';
+	import { scene, type NBTBlockData } from '$root/src/lib/compose/scene.svelte';
 
 	const { Name, Properties } = parseNBTBlockData(page.url);
 
@@ -20,6 +20,8 @@
 		...block.Properties,
 		name: Name.file
 	};
+
+	scene.schematic = Promise.resolve([block]);
 </script>
 
-<Scene {additionalUrlParams} {maxAxis} blocks={[block]} />
+<Scene {additionalUrlParams} {maxAxis} />
