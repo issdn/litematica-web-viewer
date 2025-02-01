@@ -13,6 +13,7 @@
 	import CC from 'camera-controls';
 	import Dropzone from '../ui/Dropzone.svelte';
 	import { scene } from '../../compose/scene.svelte';
+	import { buttonVariants } from '../ui/button';
 
 	const {
 		maxAxis,
@@ -98,46 +99,40 @@
 		<div class="flex flex-row gap-1">
 			<Tooltip.Provider>
 				<Tooltip.Root>
-					<Tooltip.Trigger>
-						<Button
-							disabled={!scene.ready}
-							size="icon"
-							variant="outline"
-							onclick={async () => {
-								cameraState = { cameraPosition, target };
-								cameraControls?.setLookAt(...cameraPosition.toArray(), ...target.toArray(), true);
-							}}><Rotate3D /></Button
-						>
+					<Tooltip.Trigger
+						onclick={async () => {
+							cameraState = { cameraPosition, target };
+							cameraControls?.setLookAt(...cameraPosition.toArray(), ...target.toArray(), true);
+						}}
+						class={buttonVariants({ variant: 'outline', size: 'icon' })}
+					>
+						<Rotate3D />
 					</Tooltip.Trigger>
 					<Tooltip.Content>
 						<p>Reset camera to the initial state.</p>
 					</Tooltip.Content>
 				</Tooltip.Root>
 				<Tooltip.Root>
-					<Tooltip.Trigger>
-						<Button
-							disabled={!scene.ready}
-							size="icon"
-							variant="outline"
-							onclick={async () => {
-								navigator.clipboard.writeText(createUrl(cameraState).toString()).then(() => {
-									toast.success('Copied!');
-								});
-							}}><Link /></Button
-						>
+					<Tooltip.Trigger
+						onclick={async () => {
+							navigator.clipboard.writeText(createUrl(cameraState).toString()).then(() => {
+								toast.success('Copied!');
+							});
+						}}
+						class={buttonVariants({ variant: 'outline', size: 'icon' })}
+					>
+						<Link />
 					</Tooltip.Trigger>
 					<Tooltip.Content>
 						<p>Get a link with your specific camera setup!</p>
 					</Tooltip.Content>
 				</Tooltip.Root>
 				<Tooltip.Root>
-					<Tooltip.Trigger>
-						<Button
-							disabled={!scene.ready}
-							size="icon"
-							variant="outline"
-							onclick={() => (scene.assetsManager = null)}><FolderX /></Button
-						>
+					<Tooltip.Trigger
+						onclick={() => (scene.assetsManager = null)}
+						class={buttonVariants({ variant: 'outline', size: 'icon' })}
+					>
+						<FolderX />
 					</Tooltip.Trigger>
 					<Tooltip.Content>
 						<p>Remove texture pack</p>
