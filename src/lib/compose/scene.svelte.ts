@@ -73,6 +73,10 @@ class Scene {
 		this._assetsManager = value;
 	}
 
+	get assetsManager(): MinecraftAssetsManager {
+		return this._assetsManager;
+	}
+
 	private async buildGround(size: number = 16) {
 		const instances: Vector3[] = [];
 

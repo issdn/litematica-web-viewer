@@ -17,9 +17,9 @@ export function stringifyVector3(vec: Vector3) {
 	return vec.toArray().toString();
 }
 
-export function parseNBTBlockData(url: URL) {
+export function parseNBTBlockData(url: URL, fallbackName: string) {
 	const searchParams = url.searchParams;
-	const Name = BlockNameResolver.parse(searchParams.get('name') ?? 'grass_block');
+	const Name = BlockNameResolver.parse(searchParams.get('name') ?? fallbackName);
 	const Properties = searchParams.entries().reduce((prev, [key, value]) => {
 		if (key.startsWith('camera') || key === 'instances' || key === 'name') {
 			return prev;

@@ -18,6 +18,7 @@ import {
 } from './block_name_resolver';
 import type { MinecraftAssetsManager } from '$lib/textures/minecraft_assets_manager.i';
 import type { TextureAtlas } from '../textures/texture_atlas';
+import { BlockstateResolver } from './blockstate_resolver';
 
 export const enum FileType {
 	Blockstate,
@@ -46,8 +47,6 @@ export type ResolvedBlockModel = Omit<Required<BlockModel>, 'elements'> & {
 
 export type BlockData = { model: Model; blockModel: Required<ResolvedBlockModel> };
 
-type PropertyKeys = Record<string, NBTBlockStateProperties[keyof NBTBlockStateProperties]>;
-
 function getRandomArrayItem<T>(arr: T[]) {
 	return arr[Math.floor(Math.random() * arr.length)];
 }
@@ -62,7 +61,7 @@ export class ResolvingError extends Error {
 	}
 }
 
-export class MinecraftBlockResolver {
+export class MinecraftBlockResolver extends BlockstateResolver {
 	properties: NBTBlockStateProperties;
 	minecraftAssetsManager: MinecraftAssetsManager;
 	blockstateName: BlockNameResolver;
@@ -75,6 +74,7 @@ export class MinecraftBlockResolver {
 		blockstateName: BlockNameResolver,
 		textureAtlas: TextureAtlas
 	) {
+		super();
 		this.properties = properties;
 		this.minecraftAssetsManager = minecraftAssetsManager;
 		this.blockstateName = blockstateName;
@@ -85,7 +85,7 @@ export class MinecraftBlockResolver {
 		const blockstate = await this.minecraftAssetsManager.getBlockstate(this.blockstateName);
 
 		let models: Model[];
-		if (Object.keys(blockstate)[0] == 'multipart') {
+		if (this.isMultipart(blockstate)) {
 			models = this.fromMultipart(blockstate as Multipart);
 		} else {
 			models = [this.fromVariants(blockstate as Variants)];
@@ -148,36 +148,8 @@ export class MinecraftBlockResolver {
 		return Array.isArray(result) ? getRandomArrayItem(result) : result;
 	}
 
-	getPropertyKeys() {
-		return Object.entries(this.properties).reduce((prev, [key, value]) => {
-			if (value != 'none') return { ...prev, [key]: value };
-			else return prev;
-		}, {} as PropertyKeys);
-	}
-
-	doesMatchAND(values: NBTBlockStateProperties[], keys: PropertyKeys): boolean {
-		return values.every((caseObj) => this.doesMatch(caseObj, keys));
-	}
-
-	doesMatchOR(values: NBTBlockStateProperties[], keys: PropertyKeys) {
-		return values.findIndex((caseObj) => this.doesMatch(caseObj, keys)) != -1;
-	}
-
-	doesMatch(values: NBTBlockStateProperties, keys: PropertyKeys) {
-		return Object.entries(values).every(([key, value]) => {
-			if (!(key in keys)) return false;
-			if (typeof value == 'string') {
-				if (typeof keys[key] != 'string') {
-					throw new ResolvingError('Property key has incorrect type');
-				}
-				return value.split('|').includes(keys[key]);
-			}
-			return keys[key] == value;
-		});
-	}
-
 	fromMultipart(blockstate: Multipart) {
-		const propertyKeys = this.getPropertyKeys();
+		const propertyKeys = this.getPropertyKeys(this.properties);
 		return blockstate.multipart.reduce((prev, { when, apply }) => {
 			if (when === undefined) return this._multipartGetModel(prev, apply);
 			if ('AND' in when) {
@@ -252,12 +224,4 @@ export class MinecraftBlockResolver {
 	}
 
 	linkNameToName = (name: string) => name.substring(1) as ModelTexture;
-
-	readVariantKey(stringKey: string): NBTBlockStateProperties {
-		if (stringKey == '') return {} as NBTBlockStateProperties;
-		return stringKey.split(',').reduce((prev, curr) => {
-			const [key, value] = curr.split('=');
-			return { ...prev, [key]: value };
-		}, {} as NBTBlockStateProperties);
-	}
 }
