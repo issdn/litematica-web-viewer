@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Multipart, Variants } from '$root/src/lib/types/common';
+	import type { Multipart, NBTBlockStateProperties, Variants } from '$root/src/lib/types/common';
 	import { scene } from '$root/src/lib/compose/scene.svelte';
 	import * as Command from '$lib/components/ui/command/index.js';
 	import Blocks from '$lib/blocks.json';
@@ -15,6 +15,11 @@
 	import * as Select from '$lib/components/ui/select';
 	import { Checkbox } from '$lib/components/ui/checkbox/index.js';
 	import { Label } from '$lib/components/ui/label/index.js';
+
+	type PropertyMap = Map<
+		keyof NBTBlockStateProperties,
+		Set<NonNullable<NBTBlockStateProperties[keyof NBTBlockStateProperties]>>
+	>;
 
 	const blocks = Object.keys(Blocks);
 
@@ -38,46 +43,57 @@
 
 	const resolver = new BlockstateResolver();
 
-	let propertiesPromise = $derived.by(async () => {
+	function setValue(map: PropertyMap, key: keyof NBTBlockStateProperties, value: string) {
+		if (map.has(key)) {
+			map.get(key)!.add(value);
+		} else {
+			map.set(key, new Set([value]));
+		}
+	}
+
+	function setPropertiesValues(map: PropertyMap, properties: NBTBlockStateProperties) {
+		Object.entries(properties).forEach(([key, value]) => {
+			const propertyKey = key as keyof NBTBlockStateProperties;
+			if (propertyKey.length !== 0) {
+				if (value.includes('|')) {
+					value.split('|').forEach((v) => {
+						setValue(map, propertyKey, v);
+					});
+				} else {
+					setValue(map, propertyKey, value);
+				}
+			}
+		});
+	}
+
+	let propertiesPromise: Promise<PropertyMap> = $derived.by(async () => {
 		const blockstate = await blockstatePromise;
 		if (blockstate === undefined) throw new ResolvingError("Couldn't resolve block.");
 		const isMultipart = resolver.isMultipart(blockstate);
+		const map = new Map();
 		if (isMultipart) {
-			return (blockstate as Multipart).multipart.reduce((map, { when }) => {
-				if (when === undefined) return map;
-				Object.entries(when).forEach(([key, value]) => {
-					if (key.length !== 0) {
-						if (map.has(key)) {
-							map.set(key, [...map.get(key), value]);
-						} else {
-							map.set(key, [value]);
-						}
+			(blockstate as Multipart).multipart.forEach(({ when }) => {
+				if (when !== undefined) {
+					if ('AND' in when) {
+						when.AND.forEach((obj) => setPropertiesValues(map, obj));
+					} else if ('OR' in when) {
+						when.OR.forEach((obj) => setPropertiesValues(map, obj));
+					} else {
+						setPropertiesValues(map, when);
 					}
-				});
-				return map;
-			}, new Map());
+				}
+			});
 		} else {
-			return Object.keys((blockstate as Variants).variants).reduce((map, key) => {
-				const obj = resolver.readVariantKey(key);
-				Object.entries(obj).forEach(([key, value]) => {
-					if (key.length !== 0) {
-						if (map.has(key)) {
-							map.set(key, [...map.get(key), value]);
-						} else {
-							map.set(key, [value]);
-						}
-					}
-				});
-				return map;
-			}, new Map());
+			Object.keys((blockstate as Variants).variants).forEach((key) =>
+				setPropertiesValues(map, resolver.readVariantKey(key))
+			);
 		}
+		return map;
 	});
 
-	function isCheckbox(values: string[]) {
-		return values.includes('true') || values.includes('false');
+	function isCheckbox(values: Set<string>) {
+		return values.has('true') || values.has('false');
 	}
-
-	$inspect(propertiesPromise);
 </script>
 
 <div class="absolute right-8 top-8">
@@ -98,14 +114,14 @@
 						</Label>
 					</div>
 				{:else}
-					{#each values as value}
-						<Select.Root type="single">
-							<Select.Trigger class="w-[180px]">{key}</Select.Trigger>
-							<Select.Content>
+					<Select.Root type="single">
+						<Select.Trigger class="w-[180px]">{key}</Select.Trigger>
+						<Select.Content>
+							{#each values as value}
 								<Select.Item {value}>{value}</Select.Item>
-							</Select.Content>
-						</Select.Root>
-					{/each}
+							{/each}
+						</Select.Content>
+					</Select.Root>
 				{/if}
 			{/each}
 		{/await}
