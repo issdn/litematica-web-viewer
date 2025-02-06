@@ -5,7 +5,6 @@
 	import { page } from '$app/state';
 	import { stringifyVector3, tryParseVector3 } from '$root/src/lib/parse/search_params.js';
 	import * as Tabs from '$lib/components/ui/tabs';
-	import Button from '$lib/components/ui/button/button.svelte';
 	import { FolderX, Link, Rotate3D } from 'lucide-svelte';
 	import * as Tooltip from '$lib/components/ui/tooltip/index.js';
 	import { CameraType, type Props as SchematicProps } from '$lib/types/schematic/schematic.js';
@@ -48,9 +47,6 @@
 	let cameraType: CameraType = $state(CameraType.Perspective);
 	let cameraState: SchematicProps['cameraState'] = $state(null);
 
-	let innerWidth = $state(0);
-	let innerHeight = $state(0);
-
 	let cameraPosition = $derived(
 		tryParseVector3(givenCameraPosition) ??
 			new Vector3(maxAxis, maxAxis, maxAxis).multiply({ x: 16, y: 16, z: 16 })
@@ -61,13 +57,11 @@
 	const target = tryParseVector3(givenCameraTarget) ?? new Vector3(0, 0, 0);
 </script>
 
-<svelte:window bind:innerWidth bind:innerHeight />
-
 {#if scene.ready}
 	<Dropzone />
 {/if}
 
-<div style="width: {innerWidth}px; height: {innerHeight}px;">
+<div class="h-full w-full overflow-hidden">
 	<Canvas
 		createRenderer={(canvas) => {
 			return new WebGLRenderer({

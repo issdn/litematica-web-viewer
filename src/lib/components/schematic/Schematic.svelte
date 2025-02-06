@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { T, useTask, useThrelte } from '@threlte/core';
+	import { observe, T, useTask, useThrelte, watch } from '@threlte/core';
 	import {
 		Box3,
 		Group,
@@ -10,7 +10,7 @@
 		type Object3DEventMap
 	} from 'three';
 	import Block from './Block.svelte';
-	import { scene, serverAssetsManager } from '$lib/compose/scene.svelte';
+	import { scene } from '$lib/compose/scene.svelte';
 	import { CameraType, type Props } from '$lib/types/schematic/schematic';
 	import CC from 'camera-controls';
 	import CameraControls from '../../compose/camera_controls';
@@ -24,22 +24,14 @@
 		cameraControls = $bindable(null)
 	}: Props = $props();
 
-	const { renderer, dom, invalidate } = useThrelte();
+	const { dom, invalidate, size } = useThrelte();
 
-	let innerWidth = $state(0);
-	let innerHeight = $state(0);
-	let aspect = $derived(innerWidth / innerHeight);
-
-	let initCamera =
+	const initCamera =
 		cameraType == CameraType.Perspective ? new PerspectiveCamera() : new OrthographicCamera();
 
-	let camera: OrthographicCamera | PerspectiveCamera = $state(initCamera);
+	let aspect = $state(0);
 
-	$effect(() => {
-		renderer.setSize(innerWidth, innerHeight);
-		camera.updateProjectionMatrix();
-		camera.updateMatrixWorld();
-	});
+	let camera: OrthographicCamera | PerspectiveCamera = $state(initCamera);
 
 	let schem: Group<Object3DEventMap> = $state(new Group());
 
@@ -74,6 +66,11 @@
 		cameraControls.update(0);
 	});
 
+	watch([size], ([size]) => {
+		aspect = size.width / size.height;
+		camera.updateProjectionMatrix();
+	});
+
 	useTask(
 		(delta) => {
 			if (cameraControls.update(delta)) {
@@ -83,8 +80,6 @@
 		{ autoInvalidate: false }
 	);
 </script>
-
-<svelte:window bind:innerWidth bind:innerHeight />
 
 {#if cameraType == CameraType.Orthographic}
 	<T.OrthographicCamera

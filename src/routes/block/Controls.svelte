@@ -129,8 +129,6 @@
 	function isCheckbox(values: Set<string>) {
 		return values.has('true') || values.has('false');
 	}
-
-	$inspect(userProperties);
 </script>
 
 <div class="absolute right-8 top-8">
