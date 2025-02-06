@@ -157,6 +157,7 @@ class Scene {
 		schematic: NBTBlockData[];
 		assetsManager: MinecraftAssetsManager;
 	}) {
+		if (schematic === null) return [];
 		const atlas = new TextureAtlas();
 
 		const result = await Promise.allSettled(

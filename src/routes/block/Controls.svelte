@@ -15,18 +15,86 @@
 	import * as Select from '$lib/components/ui/select';
 	import { Checkbox } from '$lib/components/ui/checkbox/index.js';
 	import { Label } from '$lib/components/ui/label/index.js';
+	import { Vector3 } from 'three';
+
+	let {
+		properties,
+		blockName,
+		additionalUrlParams = $bindable()
+	}: {
+		properties: NBTBlockStateProperties;
+		blockName: string;
+		additionalUrlParams: Record<string, string>;
+	} = $props();
 
 	type PropertyMap = Map<
 		keyof NBTBlockStateProperties,
 		Set<NonNullable<NBTBlockStateProperties[keyof NBTBlockStateProperties]>>
 	>;
 
+	function setSchematic(properties: NBTBlockStateProperties, blockName: string) {
+		scene.schematic = Promise.resolve([
+			{
+				Properties: properties,
+				Name: BlockNameResolver.parse(blockName).namespaceFile,
+				instances: [new Vector3(0, 0, 0)]
+			}
+		]);
+	}
+
+	async function getPropertiesMap(blockName: string) {
+		const blockstate = await scene.assetsManager.getBlockstate(BlockNameResolver.parse(blockName));
+		if (blockstate === undefined) throw new ResolvingError("Couldn't resolve block.");
+		const isMultipart = resolver.isMultipart(blockstate);
+		const map: PropertyMap = new Map();
+		if (isMultipart) {
+			(blockstate as Multipart).multipart.forEach(({ when }) => {
+				if (when !== undefined) {
+					if ('AND' in when) {
+						when.AND.forEach((obj) => setPropertiesValues(map, obj));
+					} else if ('OR' in when) {
+						when.OR.forEach((obj) => setPropertiesValues(map, obj));
+					} else {
+						setPropertiesValues(map, when);
+					}
+				}
+			});
+		} else {
+			Object.keys((blockstate as Variants).variants).forEach((key) =>
+				setPropertiesValues(map, resolver.readVariantKey(key))
+			);
+		}
+		return map;
+	}
+
+	function getDefaultProperties(map: PropertyMap) {
+		return [...map.entries()].reduce(
+			(prev, [key, values]) => ({
+				...prev,
+				[key]: values.values().next().value
+			}),
+			{} as NBTBlockStateProperties
+		);
+	}
+
 	const blocks = Object.keys(Blocks);
+
+	const resolver = new BlockstateResolver();
 
 	let open = $state(false);
 	let search = $state('');
-	let value = $state(blocks[1]);
+	let name = $state(blockName);
 	let triggerRef = $state<HTMLButtonElement>(null!);
+	let filtered = $derived(blocks.filter((value) => value.includes(search)));
+	let userProperties = $state(properties);
+	let propertiesMapPromise: Promise<PropertyMap> = $state(getPropertiesMap(blockName));
+
+	$effect(() => {
+		additionalUrlParams = {
+			...userProperties,
+			name
+		};
+	});
 
 	function closeAndFocusTrigger() {
 		open = false;
@@ -34,14 +102,6 @@
 			triggerRef.focus();
 		});
 	}
-
-	let filtered = $derived(blocks.filter((value) => value.includes(search)));
-
-	let blockstatePromise = $derived(
-		scene.assetsManager.getBlockstate(BlockNameResolver.parse(value))
-	);
-
-	const resolver = new BlockstateResolver();
 
 	function setValue(map: PropertyMap, key: keyof NBTBlockStateProperties, value: string) {
 		if (map.has(key)) {
@@ -66,45 +126,30 @@
 		});
 	}
 
-	let propertiesPromise: Promise<PropertyMap> = $derived.by(async () => {
-		const blockstate = await blockstatePromise;
-		if (blockstate === undefined) throw new ResolvingError("Couldn't resolve block.");
-		const isMultipart = resolver.isMultipart(blockstate);
-		const map = new Map();
-		if (isMultipart) {
-			(blockstate as Multipart).multipart.forEach(({ when }) => {
-				if (when !== undefined) {
-					if ('AND' in when) {
-						when.AND.forEach((obj) => setPropertiesValues(map, obj));
-					} else if ('OR' in when) {
-						when.OR.forEach((obj) => setPropertiesValues(map, obj));
-					} else {
-						setPropertiesValues(map, when);
-					}
-				}
-			});
-		} else {
-			Object.keys((blockstate as Variants).variants).forEach((key) =>
-				setPropertiesValues(map, resolver.readVariantKey(key))
-			);
-		}
-		return map;
-	});
-
 	function isCheckbox(values: Set<string>) {
 		return values.has('true') || values.has('false');
 	}
+
+	$inspect(userProperties);
 </script>
 
 <div class="absolute right-8 top-8">
 	<div class="flex flex-col">
-		{#await propertiesPromise}
+		{#await propertiesMapPromise}
 			<p>loading</p>
-		{:then properties}
-			{#each properties as [key, values]}
+		{:then propertiesMap}
+			{#each propertiesMap as [key, values]}
 				{#if isCheckbox(values)}
 					<div class="flex items-center space-x-2">
-						<Checkbox id={key} aria-labelledby="{key}-label" />
+						<Checkbox
+							checked={Boolean(userProperties[key])}
+							onCheckedChange={(value) => {
+								userProperties = { ...userProperties, [key]: value.toString() };
+								setSchematic(userProperties, name);
+							}}
+							id={key}
+							aria-labelledby="{key}-label"
+						/>
 						<Label
 							id="{key}-label"
 							for={key}
@@ -114,7 +159,14 @@
 						</Label>
 					</div>
 				{:else}
-					<Select.Root type="single">
+					<Select.Root
+						value={userProperties[key]}
+						onValueChange={(value) => {
+							userProperties = { ...userProperties, [key]: value };
+							setSchematic(userProperties, name);
+						}}
+						type="single"
+					>
 						<Select.Trigger class="w-[180px]">{key}</Select.Trigger>
 						<Select.Content>
 							{#each values as value}
@@ -139,7 +191,7 @@
 					role="combobox"
 					aria-expanded={open}
 				>
-					{value || 'Select a framework...'}
+					{blockName || 'Select a block...'}
 					<ChevronsUpDown class="opacity-50" />
 				</Button>
 			{/snippet}
@@ -156,11 +208,17 @@
 									class="overflow-x-hidden"
 									value={filtered[index]}
 									onSelect={() => {
-										value = filtered[index];
+										name = filtered[index];
+										propertiesMapPromise = (async () => {
+											const map = await getPropertiesMap(filtered[index]);
+											userProperties = getDefaultProperties(map);
+											setSchematic(userProperties, filtered[index]);
+											return map;
+										})();
 										closeAndFocusTrigger();
 									}}
 								>
-									<Check class={cn(value !== filtered[index] && 'text-transparent')} />
+									<Check class={cn(blockName !== filtered[index] && 'text-transparent')} />
 									{filtered[index]}
 								</Command.Item>
 							</div>

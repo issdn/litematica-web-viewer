@@ -1,30 +1,31 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import Scene from '$lib/components/schematic/Scene.svelte';
-	import { Vector3 } from 'three';
 	import type { NBTBlockStateProperties } from '$root/src/lib/types/common';
 	import { parseNBTBlockData } from '$root/src/lib/parse/search_params';
-	import { scene, type NBTBlockData } from '$root/src/lib/compose/scene.svelte';
 	import Controls from './Controls.svelte';
+	import { scene } from '$root/src/lib/compose/scene.svelte';
+	import { Vector3 } from 'three';
 
-	const { Name, Properties } = parseNBTBlockData(page.url, 'stone');
+	// svelte-ignore non_reactive_update
+	let { Name, Properties } = parseNBTBlockData(page.url, 'stone');
 
-	const block: NBTBlockData = {
-		Properties: Properties ?? ({} as NBTBlockStateProperties),
-		Name: Name.namespaceFile,
-		instances: [new Vector3(0, 0, 0)]
-	};
+	Properties ??= {} as NBTBlockStateProperties;
 
-	const maxAxis = 2;
+	scene.schematic = Promise.resolve([
+		{
+			Properties: Properties,
+			Name: Name.namespaceFile,
+			instances: [new Vector3(0, 0, 0)]
+		}
+	]);
 
-	const additionalUrlParams = {
-		...block.Properties,
+	let additionalUrlParams = $state({
+		...Properties,
 		name: Name.file
-	};
-
-	scene.schematic = Promise.resolve([block]);
+	});
 </script>
 
-<Scene {additionalUrlParams} {maxAxis} />
+<Scene {additionalUrlParams} maxAxis={2} />
 
-<Controls />
+<Controls bind:additionalUrlParams blockName={Name.file} properties={Properties} />
