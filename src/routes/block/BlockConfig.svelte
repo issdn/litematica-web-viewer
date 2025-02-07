@@ -16,6 +16,7 @@
 	import { Checkbox } from '$lib/components/ui/checkbox/index.js';
 	import { Label } from '$lib/components/ui/label/index.js';
 	import { Vector3 } from 'three';
+	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 
 	let {
 		properties,
@@ -131,60 +132,76 @@
 	}
 </script>
 
-<div class="absolute right-8 top-8">
-	<div class="flex flex-col">
-		{#await propertiesMapPromise}
-			<p>loading</p>
-		{:then propertiesMap}
-			{#each propertiesMap as [key, values]}
-				{#if isCheckbox(values)}
-					<div class="flex items-center space-x-2">
-						<Checkbox
-							checked={Boolean(userProperties[key])}
-							onCheckedChange={(value) => {
-								userProperties = { ...userProperties, [key]: value.toString() };
-								setSchematic(userProperties, name);
-							}}
-							id={key}
-							aria-labelledby="{key}-label"
-						/>
-						<Label
-							id="{key}-label"
-							for={key}
-							class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-						>
-							{key}
-						</Label>
-					</div>
-				{:else}
-					<Select.Root
-						value={userProperties[key]}
-						onValueChange={(value) => {
-							userProperties = { ...userProperties, [key]: value };
+<Sidebar.Root>
+	<Sidebar.Content>
+		<Sidebar.Group>
+			<Sidebar.GroupLabel>Select a block</Sidebar.GroupLabel>
+			<Sidebar.GroupContent>
+				{@render blockChange()}
+			</Sidebar.GroupContent>
+		</Sidebar.Group>
+		<Sidebar.Separator />
+		<Sidebar.Group>
+			<Sidebar.GroupLabel>Configure it</Sidebar.GroupLabel>
+			<Sidebar.GroupContent class="flex flex-col gap-y-1">
+				{@render config()}
+			</Sidebar.GroupContent>
+		</Sidebar.Group>
+	</Sidebar.Content>
+</Sidebar.Root>
+
+{#snippet config()}
+	{#await propertiesMapPromise}
+		<p>loading</p>
+	{:then propertiesMap}
+		{#each propertiesMap as [key, values]}
+			{#if isCheckbox(values)}
+				<div class="flex w-[15rem] items-center gap-x-4 px-2 py-1">
+					<Checkbox
+						checked={Boolean(userProperties[key])}
+						onCheckedChange={(value) => {
+							userProperties = { ...userProperties, [key]: value.toString() };
 							setSchematic(userProperties, name);
 						}}
-						type="single"
+						id={key}
+						aria-labelledby="{key}-label"
+					/>
+					<Label
+						id="{key}-label"
+						for={key}
+						class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
 					>
-						<Select.Trigger class="w-[180px]">{key}</Select.Trigger>
-						<Select.Content>
-							{#each values as value}
-								<Select.Item {value}>{value}</Select.Item>
-							{/each}
-						</Select.Content>
-					</Select.Root>
-				{/if}
-			{/each}
-		{/await}
-	</div>
-</div>
+						{key}
+					</Label>
+				</div>
+			{:else}
+				<Select.Root
+					value={userProperties[key]}
+					onValueChange={(value) => {
+						userProperties = { ...userProperties, [key]: value };
+						setSchematic(userProperties, name);
+					}}
+					type="single"
+				>
+					<Select.Trigger class="w-[15rem] bg-background">{key}</Select.Trigger>
+					<Select.Content>
+						{#each values as value}
+							<Select.Item {value}>{value}</Select.Item>
+						{/each}
+					</Select.Content>
+				</Select.Root>
+			{/if}
+		{/each}
+	{/await}
+{/snippet}
 
-<div class="absolute left-8 top-8">
+{#snippet blockChange()}
 	<Popover.Root bind:open>
 		<Popover.Trigger bind:ref={triggerRef}>
 			{#snippet child({ props })}
 				<Button
 					variant="outline"
-					class="w-[200px] justify-between"
+					class="w-[15rem] justify-between"
 					{...props}
 					role="combobox"
 					aria-expanded={open}
@@ -194,7 +211,7 @@
 				</Button>
 			{/snippet}
 		</Popover.Trigger>
-		<Popover.Content class="w-[200px] p-0">
+		<Popover.Content class="w-[15rem] p-0">
 			<Command.Root shouldFilter={false}>
 				<Command.Input bind:value={search} placeholder="Search blocks..." />
 				<Command.List class="h-64 overflow-y-hidden">
@@ -226,4 +243,4 @@
 			</Command.Root>
 		</Popover.Content>
 	</Popover.Root>
-</div>
+{/snippet}

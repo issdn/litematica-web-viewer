@@ -3,9 +3,10 @@
 	import Scene from '$lib/components/schematic/Scene.svelte';
 	import type { NBTBlockStateProperties } from '$root/src/lib/types/common';
 	import { parseNBTBlockData } from '$root/src/lib/parse/search_params';
-	import Controls from './Controls.svelte';
+	import BlockConfig from './BlockConfig.svelte';
 	import { scene } from '$root/src/lib/compose/scene.svelte';
 	import { Vector3 } from 'three';
+	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 
 	// svelte-ignore non_reactive_update
 	let { Name, Properties } = parseNBTBlockData(page.url, 'stone');
@@ -26,6 +27,10 @@
 	});
 </script>
 
-<Scene {additionalUrlParams} maxAxis={2} />
-
-<Controls bind:additionalUrlParams blockName={Name.file} properties={Properties} />
+<Sidebar.Provider class="h-full w-full">
+	<BlockConfig bind:additionalUrlParams blockName={Name.file} properties={Properties} />
+	<div class="p-2">
+		<Sidebar.Trigger class="p-4" />
+	</div>
+	<Scene {additionalUrlParams} maxAxis={2} />
+</Sidebar.Provider>
