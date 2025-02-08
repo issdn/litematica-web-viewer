@@ -61,7 +61,6 @@
 		"jszip": "^3.10.1",
 		"prismarine-nbt": "github:issdn/prismarine-nbt",
 		"protodef": "^1.18.0",
-		"svelte-file-dropzone": "^2.0.9",
 		"svelte-tiny-virtual-list": "^2.1.2",
 		"three": "^0.171.0",
 		"vite-plugin-fs": "^1.1.0"
