@@ -10,7 +10,7 @@
 	import { CameraType, type Props as SchematicProps } from '$lib/types/schematic/schematic.js';
 	import { toast } from 'svelte-sonner';
 	import CC from 'camera-controls';
-	import Dropzone from '$lib/components/ui/Dropzone.svelte';
+	import Dropzone from '$root/src/lib/components/Dropzone.svelte';
 	import { scene } from '$lib/compose/scene.svelte';
 	import { Button, buttonVariants } from '../ui/button';
 	import Spinner from '../ui/Spinner.svelte';

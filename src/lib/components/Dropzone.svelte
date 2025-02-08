@@ -1,11 +1,11 @@
 <script lang="ts">
-	import { scene, serverAssetsManager } from '../../compose/scene.svelte';
-	import { ClientMinecraftAssetsManager } from '../../textures/client_assets_manager';
-	import { ZipFileService } from '../../textures/zip_file_service';
-	import { StandardFileService } from '../../textures/standard_file_service';
+	import { scene, serverAssetsManager } from '../compose/scene.svelte';
+	import { ClientMinecraftAssetsManager } from '../textures/client_assets_manager';
+	import { ZipFileService } from '../textures/zip_file_service';
+	import { StandardFileService } from '../textures/standard_file_service';
 	import { FolderArchive, FolderUp } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
-	import { getRegions } from '../../parse/schematic_parser';
+	import { getRegions } from '../parse/schematic_parser';
 
 	const { isSchematic }: { isSchematic: boolean } = $props();
 
