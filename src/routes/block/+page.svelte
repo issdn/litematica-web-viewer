@@ -9,9 +9,9 @@
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 
 	// svelte-ignore non_reactive_update
-	let { Name, Properties } = parseNBTBlockData(page.url, 'stone');
+	let { Name, Properties } = parseNBTBlockData(page.url, 'sea_pickle');
 
-	Properties ??= {} as NBTBlockStateProperties;
+	Properties ??= { pickles: '2', waterlogged: 'true' } as NBTBlockStateProperties;
 
 	scene.schematic = Promise.resolve([
 		{
