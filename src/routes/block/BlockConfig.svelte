@@ -159,7 +159,7 @@
 			{#if isCheckbox(values)}
 				<div class="flex w-[15rem] items-center gap-x-4 px-2 py-1">
 					<Checkbox
-						checked={Boolean(userProperties[key])}
+						checked={userProperties[key] === 'true'}
 						onCheckedChange={(value) => {
 							userProperties = { ...userProperties, [key]: value.toString() };
 							setSchematic(userProperties, name);
