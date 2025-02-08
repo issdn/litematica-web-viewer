@@ -7,6 +7,8 @@
 	import { toast } from 'svelte-sonner';
 	import { getRegions } from '../../parse/schematic_parser';
 
+	const { isSchematic }: { isSchematic: boolean } = $props();
+
 	class UploadException extends Error {}
 
 	let isDropping = $state(false);
@@ -23,9 +25,11 @@
 				case 'zip':
 					await handleZipTxt(item as FileSystemFileEntry);
 					break;
-				case 'litematic':
-					await handleLitematic(item);
+				case 'litematic': {
+					if (isSchematic) await handleLitematic(item);
+					else throw new UploadException('Switch to schematic viewer to load .litematic');
 					break;
+				}
 				default:
 					throw new UploadException('Only .zip and .litematic allowed.');
 			}
@@ -118,7 +122,13 @@
 			<span>Loading...</span>
 		{:else}
 			<FolderArchive size={84} />
-			<span>Drop your texturepack or a .litematic here!</span>
+			<span
+				>Drop your texturepack
+				{#if isSchematic}
+					or a .litematic
+				{/if}
+				here!</span
+			>
 		{/if}
 	</div>
 </div>

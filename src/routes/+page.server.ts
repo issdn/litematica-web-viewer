@@ -1,5 +1,5 @@
 import { redirect } from '@sveltejs/kit';
 
-export const load = ({ locals }) => {
+export const load = () => {
 	redirect(308, '/block');
 };

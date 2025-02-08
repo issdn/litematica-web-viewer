@@ -12,7 +12,7 @@
 	import CC from 'camera-controls';
 	import Dropzone from '../ui/Dropzone.svelte';
 	import { scene } from '../../compose/scene.svelte';
-	import { buttonVariants } from '../ui/button';
+	import { Button, buttonVariants } from '../ui/button';
 	import Spinner from '../ui/Spinner.svelte';
 
 	const {
@@ -22,6 +22,8 @@
 		maxAxis: number;
 		additionalUrlParams?: Record<string, string>;
 	} = $props();
+
+	const isSchematic = page.url.pathname === '/schematic';
 
 	function createUrl(camera: SchematicProps['cameraState']) {
 		const url = new URL(page.url.origin);
@@ -59,7 +61,7 @@
 </script>
 
 {#if scene.ready}
-	<Dropzone />
+	<Dropzone {isSchematic} />
 {/if}
 
 <div class="flex h-full w-full items-center justify-center overflow-hidden">
@@ -136,6 +138,16 @@
 					</Tooltip.Trigger>
 					<Tooltip.Content>
 						<p>Remove texture pack</p>
+					</Tooltip.Content>
+				</Tooltip.Root>
+				<Tooltip.Root>
+					<Tooltip.Trigger>
+						<Button href={`/${isSchematic ? 'block' : 'schematic'}`} variant="outline"
+							>{isSchematic ? 'block' : 'schematic'}</Button
+						>
+					</Tooltip.Trigger>
+					<Tooltip.Content>
+						<p>Switch to {isSchematic ? 'block' : 'schematic'} viewer.</p>
 					</Tooltip.Content>
 				</Tooltip.Root>
 			</Tooltip.Provider>
