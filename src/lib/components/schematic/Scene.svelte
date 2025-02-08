@@ -13,6 +13,7 @@
 	import Dropzone from '../ui/Dropzone.svelte';
 	import { scene } from '../../compose/scene.svelte';
 	import { buttonVariants } from '../ui/button';
+	import Spinner from '../ui/Spinner.svelte';
 
 	const {
 		maxAxis,
@@ -61,25 +62,30 @@
 	<Dropzone />
 {/if}
 
-<div class="h-full w-full overflow-hidden">
-	<Canvas
-		createRenderer={(canvas) => {
-			return new WebGLRenderer({
-				canvas,
-				alpha: true,
-				antialias: false
-			});
-		}}
-	>
-		<Schematic
-			bind:cameraState
-			bind:cameraControls
-			{cameraType}
-			{cameraPosition}
-			{frustumSize}
-			{target}
-		/>
-	</Canvas>
+<div class="flex h-full w-full items-center justify-center overflow-hidden">
+	{#await scene.instance}
+		<Spinner />
+	{:then blocks}
+		<Canvas
+			createRenderer={(canvas) => {
+				return new WebGLRenderer({
+					canvas,
+					alpha: true,
+					antialias: false
+				});
+			}}
+		>
+			<Schematic
+				bind:cameraState
+				bind:cameraControls
+				{cameraType}
+				{cameraPosition}
+				{frustumSize}
+				{target}
+				{blocks}
+			/>
+		</Canvas>
+	{/await}
 </div>
 
 <div class="absolute bottom-10 left-1/2 -translate-x-1/2">

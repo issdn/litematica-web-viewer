@@ -14,6 +14,7 @@
 	import { CameraType, type Props } from '$lib/types/schematic/schematic';
 	import CC from 'camera-controls';
 	import CameraControls from '../../compose/camera_controls';
+	import Spinner from '../ui/Spinner.svelte';
 
 	let {
 		cameraPosition,
@@ -21,7 +22,8 @@
 		target,
 		cameraType,
 		cameraState = $bindable(null),
-		cameraControls = $bindable(null)
+		cameraControls = $bindable(null),
+		blocks
 	}: Props = $props();
 
 	const { dom, invalidate, size } = useThrelte();
@@ -109,15 +111,11 @@
 
 <!-- {@render renderBlocks(ground)} -->
 
-{#await scene.instance}
-	<p>loading</p>
-{:then blocks}
-	<T.Group bind:ref={schem}>
-		{#each blocks as block}
-			<Block {...block} />
-		{/each}
-	</T.Group>
-{/await}
+<T.Group bind:ref={schem}>
+	{#each blocks as block}
+		<Block {...block} />
+	{/each}
+</T.Group>
 
 <!-- {#await scene.ground then blocks}
 	<T.Group>

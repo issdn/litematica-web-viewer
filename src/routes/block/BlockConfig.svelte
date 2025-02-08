@@ -17,6 +17,7 @@
 	import { Label } from '$lib/components/ui/label/index.js';
 	import { Vector3 } from 'three';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
+	import Spinner from '$root/src/lib/components/ui/Spinner.svelte';
 
 	let {
 		properties,
@@ -143,7 +144,7 @@
 		<Sidebar.Separator />
 		<Sidebar.Group>
 			<Sidebar.GroupLabel>Configure it</Sidebar.GroupLabel>
-			<Sidebar.GroupContent class="flex flex-col gap-y-1">
+			<Sidebar.GroupContent class="flex flex-col items-center gap-y-1">
 				{@render config()}
 			</Sidebar.GroupContent>
 		</Sidebar.Group>
@@ -152,7 +153,7 @@
 
 {#snippet config()}
 	{#await propertiesMapPromise}
-		<p>loading</p>
+		<Spinner />
 	{:then propertiesMap}
 		{#each propertiesMap as [key, values]}
 			{#if isCheckbox(values)}
@@ -206,7 +207,7 @@
 					role="combobox"
 					aria-expanded={open}
 				>
-					{blockName || 'Select a block...'}
+					{name || 'Select a block...'}
 					<ChevronsUpDown class="opacity-50" />
 				</Button>
 			{/snippet}
@@ -233,7 +234,7 @@
 										closeAndFocusTrigger();
 									}}
 								>
-									<Check class={cn(blockName !== filtered[index] && 'text-transparent')} />
+									<Check class={cn(name !== filtered[index] && 'text-transparent')} />
 									{filtered[index]}
 								</Command.Item>
 							</div>

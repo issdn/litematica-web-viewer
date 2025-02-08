@@ -29,8 +29,10 @@
 
 <Sidebar.Provider class="h-full w-full">
 	<BlockConfig bind:additionalUrlParams blockName={Name.file} properties={Properties} />
-	<div class="p-2">
-		<Sidebar.Trigger class="p-4" />
-	</div>
-	<Scene {additionalUrlParams} maxAxis={2} />
+	<main class="relative flex h-full w-full flex-col">
+		<div class="p-2">
+			<Sidebar.Trigger class="p-4" />
+		</div>
+		<Scene {additionalUrlParams} maxAxis={2} />
+	</main>
 </Sidebar.Provider>

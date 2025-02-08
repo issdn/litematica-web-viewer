@@ -118,7 +118,7 @@
 			<span>Loading...</span>
 		{:else}
 			<FolderArchive size={84} />
-			<span>Drop your texturepack here!</span>
+			<span>Drop your texturepack or a .litematic here!</span>
 		{/if}
 	</div>
 </div>
