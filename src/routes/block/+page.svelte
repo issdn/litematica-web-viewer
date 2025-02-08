@@ -29,7 +29,7 @@
 
 <Sidebar.Provider class="h-full w-full">
 	<BlockConfig bind:additionalUrlParams blockName={Name.file} properties={Properties} />
-	<main class="relative flex h-full w-full flex-col">
+	<main class="relative flex h-full w-full min-w-0 flex-shrink">
 		<div class="p-2">
 			<Sidebar.Trigger class="p-4" />
 		</div>

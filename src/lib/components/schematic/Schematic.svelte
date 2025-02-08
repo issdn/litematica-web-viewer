@@ -10,11 +10,9 @@
 		type Object3DEventMap
 	} from 'three';
 	import Block from './Block.svelte';
-	import { scene } from '$lib/compose/scene.svelte';
 	import { CameraType, type Props } from '$lib/types/schematic/schematic';
 	import CC from 'camera-controls';
 	import CameraControls from '../../compose/camera_controls';
-	import Spinner from '../ui/Spinner.svelte';
 
 	let {
 		cameraPosition,
