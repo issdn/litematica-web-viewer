@@ -154,3 +154,7 @@
 		</div>
 	</div>
 </div>
+
+<small class="absolute bottom-4 right-4 text-xs leading-none text-foreground"
+	>Currently entity models (signs, chests etc.) won't load :(</small
+>
