@@ -19,7 +19,7 @@
 	const { name, properties } = getContext<BlockContext>('block');
 
 	function getElementColor(tintindex: FaceData['tintindex']) {
-		if (tintindex < 0) return undefined;
+		if ((tintindex ?? -1) < 0) return undefined;
 		return getColor(name)?.(properties);
 	}
 
