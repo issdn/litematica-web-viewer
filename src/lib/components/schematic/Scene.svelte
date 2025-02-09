@@ -91,7 +91,7 @@
 </div>
 
 <div class="absolute bottom-10 left-1/2 -translate-x-1/2">
-	<div class="flex flex-col gap-1">
+	<div class="flex flex-col items-center gap-1">
 		<Tabs.Root bind:value={cameraType}>
 			<Tabs.List>
 				<Tabs.Trigger value={CameraType.Perspective}>Perspective</Tabs.Trigger>
@@ -152,9 +152,10 @@
 				</Tooltip.Root>
 			</Tooltip.Provider>
 		</div>
+		<small class="text-sm text-muted-foreground">drag and drop a resourcepack</small>
 	</div>
 </div>
 
-<small class="absolute bottom-4 right-4 text-xs leading-none text-foreground"
+<small class="absolute bottom-4 right-4 text-xs leading-none text-muted-foreground"
 	>Currently entity models (signs, chests etc.) won't load :(</small
 >
