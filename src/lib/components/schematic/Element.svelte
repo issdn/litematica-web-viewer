@@ -4,7 +4,8 @@
 		BoxGeometry,
 		Vector3,
 		Quaternion,
-		type Vector3Tuple
+		type Vector3Tuple,
+		AxesHelper
 	} from 'three';
 	import { Instance, InstancedMesh } from '@threlte/extras';
 	import { getContext } from 'svelte';
@@ -17,6 +18,7 @@
 	import { degToRad } from 'three/src/math/MathUtils.js';
 	import { resetFaceRotation, createUVFace } from '../../render/uv';
 	import { scene } from '../../compose/scene.svelte';
+	import { T } from '@threlte/core';
 
 	type Props = {
 		radiansRotation: Required<BlockRotation>;
@@ -153,44 +155,43 @@
 		geometry.setAttribute('uv', new Float32BufferAttribute(resolveFaces(), 2));
 	});
 
-	let { quaternion, scale } = $derived.by(() => {
-		const quaternion = ref.quaternion.clone();
-		const scale = ref.scale.clone();
+	function getSpecs() {
+		const quaternion = new Quaternion(0, 0, 0, 1);
+		const scale = new Vector3(1, 1, 1);
 
-		quaternion
-			.multiplyQuaternions(
-				new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), -radiansRotation.x),
-				quaternion
-			)
-			.multiplyQuaternions(
-				new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), -radiansRotation.y),
-				quaternion
-			);
+		const tempQuaternion = new Quaternion();
+
+		tempQuaternion.setFromAxisAngle(new Vector3(1, 0, 0), -radiansRotation.x);
+		quaternion.multiply(tempQuaternion);
+
+		tempQuaternion.setFromAxisAngle(new Vector3(0, 1, 0), -radiansRotation.y);
+		quaternion.multiply(tempQuaternion);
+
+		const position = new Vector3(0, 0, 0);
 		if (rotation != null) {
+			const pivot = new Vector3(...(rotation?.origin ?? [0, 0, 0]));
+			position.sub(pivot);
 			if (rotation.axis == 'x') {
-				quaternion.multiplyQuaternions(
-					new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), rotationAngle),
-					quaternion
-				);
+				tempQuaternion.setFromAxisAngle(new Vector3(1, 0, 0), rotationAngle);
 				if (rotation.rescale == true) {
 					scale.setX(scaling);
 					scale.setY(scaling);
 				}
 			}
 			if (rotation.axis == 'y') {
-				quaternion.multiplyQuaternions(
-					new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), rotationAngle),
-					quaternion
-				);
+				tempQuaternion.setFromAxisAngle(new Vector3(0, 1, 0), rotationAngle);
 				if (rotation.rescale == true) {
 					scale.setX(scaling);
 					scale.setZ(scaling);
 				}
 			}
+			position.applyQuaternion(tempQuaternion);
+			position.add(pivot);
+			quaternion.multiply(tempQuaternion);
 		}
 
-		return { quaternion, scale };
-	});
+		return { quaternion, scale, position };
+	}
 </script>
 
 <InstancedMesh
@@ -201,16 +202,21 @@
 	castShadow={false}
 	{geometry}
 >
-	{#each instances as position}
-		<Instance
-			quaternion={quaternion.toArray()}
-			scale={scale.toArray()}
-			position={[
-				position.x * 16 - padding.x + fromRotated.x,
-				position.y * 16 - padding.y + fromRotated.y,
-				position.z * 16 - padding.z + fromRotated.z
-			] as Vector3Tuple}
-		></Instance>
+	{#each instances as pos}
+		{@const { quaternion, scale, position } = getSpecs()}
+		<T.Group>
+			<Instance
+				quaternion={quaternion.toArray()}
+				scale={scale.toArray()}
+				position={pos
+					.clone()
+					.multiplyScalar(16)
+					.sub(padding)
+					.add(fromRotated)
+					.add(position)
+					.toArray()}
+			></Instance>
+		</T.Group>
 	{/each}
 	{#each Object.values(facesData) as face}
 		{#snippet getFace(transparent: boolean, texture?: Texture)}
