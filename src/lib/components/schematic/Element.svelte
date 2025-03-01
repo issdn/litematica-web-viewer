@@ -5,7 +5,8 @@
 		Vector3,
 		Quaternion,
 		type Vector3Tuple,
-		AxesHelper
+		AxesHelper,
+		Box3Helper
 	} from 'three';
 	import { Instance, InstancedMesh } from '@threlte/extras';
 	import { getContext } from 'svelte';
@@ -137,16 +138,6 @@
 
 	const fromRotated = new Vector3(...from);
 
-	if (radiansRotation.x != 0) {
-		padding.applyAxisAngle(new Vector3(1, 0, 0), -radiansRotation.x);
-		fromRotated.applyAxisAngle(new Vector3(1, 0, 0), -radiansRotation.x);
-	}
-
-	if (radiansRotation.y != 0) {
-		padding.applyAxisAngle(new Vector3(0, 1, 0), -radiansRotation.y);
-		fromRotated.applyAxisAngle(new Vector3(0, 1, 0), -radiansRotation.y);
-	}
-
 	let ref = $state() as InstancedMesh;
 
 	const geometry = new BoxGeometry(...size).toNonIndexed();
@@ -168,11 +159,10 @@
 		quaternion.multiply(tempQuaternion);
 
 		const position = new Vector3(0, 0, 0);
+
 		if (rotation != null) {
-			const pivot = new Vector3(...(rotation?.origin ?? [0, 0, 0]));
-			position.sub(pivot);
 			if (rotation.axis == 'x') {
-				tempQuaternion.setFromAxisAngle(new Vector3(1, 0, 0), rotationAngle);
+				tempQuaternion.setFromAxisAngle(new Vector3(1, 0, 0), degToRad(45));
 				if (rotation.rescale == true) {
 					scale.setX(scaling);
 					scale.setY(scaling);
@@ -185,14 +175,23 @@
 					scale.setZ(scaling);
 				}
 			}
-			position.applyQuaternion(tempQuaternion);
-			position.add(pivot);
+
+			const center = new Vector3(8, 8, 8);
+			const pivot = new Vector3(...(rotation?.origin ?? [0, 0, 0]));
+			// position.copy(center).sub(pivot);
+			console.log({ size, center, position });
 			quaternion.multiply(tempQuaternion);
+			position.applyQuaternion(quaternion);
 		}
 
 		return { quaternion, scale, position };
 	}
 </script>
+
+<T.Mesh position={[0, 0, 0]}>
+	<T.BoxGeometry args={[16, 16, 16]} />
+	<T.MeshBasicMaterial wireframe={true} />
+</T.Mesh>
 
 <InstancedMesh
 	bind:ref
@@ -204,19 +203,20 @@
 >
 	{#each instances as pos}
 		{@const { quaternion, scale, position } = getSpecs()}
-		<T.Group>
-			<Instance
-				quaternion={quaternion.toArray()}
-				scale={scale.toArray()}
-				position={pos
-					.clone()
-					.multiplyScalar(16)
-					.sub(padding)
-					.add(fromRotated)
-					.add(position)
-					.toArray()}
-			></Instance>
-		</T.Group>
+		<Instance
+			oncreate={(ref) => console.log(ref.position)}
+			quaternion={quaternion.toArray()}
+			scale={scale.toArray()}
+			position={pos
+				.clone()
+				.multiplyScalar(16)
+				// .sub(padding)
+				// .add(fromRotated)
+				.applyAxisAngle(new Vector3(0, 1, 0), -radiansRotation.y)
+				.applyAxisAngle(new Vector3(1, 0, 0), -radiansRotation.x)
+				.sub(position)
+				.toArray()}
+		></Instance>
 	{/each}
 	{#each Object.values(facesData) as face}
 		{#snippet getFace(transparent: boolean, texture?: Texture)}
