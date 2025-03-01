@@ -135,66 +135,44 @@
 
 	const fromRotated = new Vector3(...from);
 
-	if (radiansRotation.x != 0) {
-		padding.applyAxisAngle(new Vector3(1, 0, 0), -radiansRotation.x);
-		fromRotated.applyAxisAngle(new Vector3(1, 0, 0), -radiansRotation.x);
-	}
-
-	if (radiansRotation.y != 0) {
-		padding.applyAxisAngle(new Vector3(0, 1, 0), -radiansRotation.y);
-		fromRotated.applyAxisAngle(new Vector3(0, 1, 0), -radiansRotation.y);
-	}
-
-	let ref = $state() as InstancedMesh;
-
 	const geometry = new BoxGeometry(...size).toNonIndexed();
 
 	$effect(() => {
 		geometry.setAttribute('uv', new Float32BufferAttribute(resolveFaces(), 2));
 	});
 
-	let { quaternion, scale } = $derived.by(() => {
-		const quaternion = ref.quaternion.clone();
-		const scale = ref.scale.clone();
+	const quaternion = new Quaternion(0, 0, 0, 1);
+	const scale = new Vector3(1, 1, 1);
 
-		quaternion
-			.multiplyQuaternions(
-				new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), -radiansRotation.x),
-				quaternion
-			)
-			.multiplyQuaternions(
-				new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), -radiansRotation.y),
-				quaternion
-			);
-		if (rotation != null) {
-			if (rotation.axis == 'x') {
-				quaternion.multiplyQuaternions(
-					new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), rotationAngle),
-					quaternion
-				);
-				if (rotation.rescale == true) {
-					scale.setX(scaling);
-					scale.setY(scaling);
-				}
-			}
-			if (rotation.axis == 'y') {
-				quaternion.multiplyQuaternions(
-					new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), rotationAngle),
-					quaternion
-				);
-				if (rotation.rescale == true) {
-					scale.setX(scaling);
-					scale.setZ(scaling);
-				}
+	const tempQuaternion = new Quaternion();
+
+	tempQuaternion.setFromAxisAngle(new Vector3(1, 0, 0), -radiansRotation.x);
+	quaternion.multiply(tempQuaternion);
+
+	tempQuaternion.setFromAxisAngle(new Vector3(0, 1, 0), -radiansRotation.y);
+	quaternion.multiply(tempQuaternion);
+
+	if (rotation != null) {
+		if (rotation.axis == 'x') {
+			tempQuaternion.setFromAxisAngle(new Vector3(1, 0, 0), rotationAngle);
+			quaternion.multiply(tempQuaternion);
+			if (rotation.rescale == true) {
+				scale.setX(scaling);
+				scale.setY(scaling);
 			}
 		}
-
-		return { quaternion, scale };
-	});
+		if (rotation.axis == 'y') {
+			tempQuaternion.setFromAxisAngle(new Vector3(0, 1, 0), rotationAngle);
+			quaternion.multiply(tempQuaternion);
+			if (rotation.rescale == true) {
+				scale.setX(scaling);
+				scale.setZ(scaling);
+			}
+		}
+	}
 </script>
 
 <InstancedMesh
-	bind:ref
 	range={instances.length}
 	limit={instances.length}
 	receiveShadow={shade && !transparent}
@@ -205,11 +183,14 @@
 		<Instance
 			quaternion={quaternion.toArray()}
 			scale={scale.toArray()}
-			position={[
-				position.x * 16 - padding.x + fromRotated.x,
-				position.y * 16 - padding.y + fromRotated.y,
-				position.z * 16 - padding.z + fromRotated.z
-			] as Vector3Tuple}
+			position={position
+				.clone()
+				.multiplyScalar(16)
+				.sub(padding)
+				.add(fromRotated)
+				.applyAxisAngle(new Vector3(0, 1, 0), -radiansRotation.y)
+				.applyAxisAngle(new Vector3(1, 0, 0), -radiansRotation.x)
+				.toArray()}
 		></Instance>
 	{/each}
 	{#each Object.values(facesData) as face}
